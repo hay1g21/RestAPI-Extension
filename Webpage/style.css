@@ -1,0 +1,62 @@
+body {background-color: #fddbfd;
+  font-family: Calibri;
+}
+
+
+h1 {
+  color: rgb(44, 0, 21);
+  /* !--margin-left: 20px; */
+  text-decoration: blink;
+  font-family: Calibri;
+  font-size: 38px
+
+}
+
+table, tr, th, td{
+  border: 1px solid;
+  --width: 50%
+
+
+}
+
+img{
+  border: 1px solid;
+}
+
+.get{
+  color: rgb(15, 0, 175);
+}
+
+.put{
+  color: rgb(96, 0, 175);
+}
+
+.post{
+  color: rgb(175, 70, 0);
+}
+
+.patch{
+  color: rgb(0, 175, 52);
+}
+
+.delete{
+  color: rgb(175, 0, 67);
+}
+
+.head{
+  color: rgb(163, 175, 0);
+}
+
+.options{
+  color: rgb(175, 0, 175);
+}
+
+.border{
+  border: 1px solid;
+}
+
+ul {
+  text-align: center;
+  list-style-position: inside;
+}
+
