@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Metadeta and stuff -->
+<link rel="stylesheet" href="style.css">
+
+<title>API Doc</title>
+</head>
+
+<body>
+
+<div class = "lineheightclose">
+<h1><center><b>API Documentation</b></center></h1>
+
+<h4><center>A look into the University Faculty API</center></h4>
+</div>
+<br></br>
+
+<div class = "introsection">
+<h2>Starting point</h2>
+
+<p>The API can be accessed through this given starting URI <a href="http://comp3227.ecs.soton.ac.uk/modules/15">http://comp3227.ecs.soton.ac.uk/modules/15</a>, which links to a resource of a module in the API.
+    From here we can explore the API and the rest of the endpoints located inside it.
+
+</p>
+
+<div>
+    <h2>General URI Format</h2>
+    <p>Each URI has a commonly shared structure which is made of multiple sections:</p>
+    <ol>
+        <li>Each URI specifies the http <b>protocol</b> at the beginning of the URI as 'http://', which is the protocol used to access the resources in the API.</li>
+        <li>The <b>domain</b> of the URI is comp3227.ecs.soton.ac.uk, which identifies the host origin server for the API</li>
+        <li>The <b>path</b> comes next after the general root URI 'http://comp3227.ecs.soton.ac.uk', and is designated through a series of '/' characters and keywords e.g /modules/15 </li>
+        <li>Finally a <b>resource identifier</b> can be used at the end to locate a specific resource e.g modules/15 has the identifier '15'</li>
+    </ol>
+
+    <p>For the example URI <b><span style="color:rgb(82, 82, 16)">http://</span><span style="color:rgb(11, 60, 80)">comp3227.ecs.soton.ac.uk</span><span style="color:rgb(65, 10, 40)">/modules/</span><span style="color:rgb(10, 65, 17)">15</span></b>, its individual parts have been colour coded. 
+        Here we can see it specifies the 'http' protocol, identifies the origin server at 'comp3227.ecs.soton.ac.uk' and follows a path of /modules/ and specifies module resource located at identifier '15'.</p>
+
+    
+        
+        
+
+</div>
+
+</div>
+
+<div class="modulessection"> <!--style="text-align:center;"> -->
+
+<h2>Module URIs</h2>
+
+<h3>Format of Module URI</h3>
+
+<table class = "centertable">
+    <caption><b>URI Parameters</b></caption>
+    <tr>
+        <th>Parameter</th>
+        <th>Meaning</th>
+    </tr>
+    <tr>
+        <td>{Module id} : int</td>
+        <td>The id of the module as ordered in the list of modules stored in the API server. <br> The id can be left out to obtain the endpoint to the list of all stored modules.</td>
+    </tr>
+</table>
+
+<p>Example URI: <a href="http://comp3227.ecs.soton.ac.uk/modules/109">http://comp3227.ecs.soton.ac.uk/modules/109</a></p>
+
+
+
+<h3>Requests methods and Responses</h3>
+
+
+<p><b>The following methods are allowed for endpoints with path <pre style = "font-size: 15px">'http://comp3227.ecs.soton.ac.uk/modules/{Module id}'</pre></b></p>
+
+<div>
+<ul class = "bulcenter">
+    <b>
+    <li class = "get">GET</li>
+    <li class = "put">PUT</li>
+    <li class = "patch">PATCH</li>
+    <li class = "delete">DELETE</li>
+    <li class = "head">HEAD</li>
+    <li class = "options">OPTIONS</li>
+    </b>
+</ul>
+</div>
+
+<h4 class = "get">GET Method</h4>
+<div class= "indent">
+<ul>
+    <li><p>Using the get method returns a representation of the URI with a <b>200 OK</b> response if the call is successful. </p></li>
+    <li><p>If the value in the <b>{Module id}</b> is not recognised by the API, a <b>404 Not Found</b> Response is returned as well as a 'Not Found' description in the response body.</p></li>
+</ul>
+
+
+
+<h5 style>Response from a GET Request on URI 'http://comp3227.ecs.soton.ac.uk/modules/109'</h5>
+<img src="images/getMod.PNG" alt="The body returned by the server after a GET Method">
+
+<div>
+
+    <h3>Representation Format</h3>
+    <p>The formats allowed for the returned representation are in JSON, XML and CSV Text. The default representation given by the server is in JSON format.</p>
+    <img src="images/moduleREP.PNG" alt="Example Representation in JSON for URI http://comp3227.ecs.soton.ac.uk/modules/109">
+
+    <p>The fields in the body are as follows (In JSON Format):</p>
+
+    <table class = "centertable">
+        <caption><b>URI Representation Parameters</b></caption>
+        <colgroup>
+            <col span="1" style="width: 15%;">
+            <col span="1" style="width: 30%;">
+            <col span="1" style="width: 55%;">
+         </colgroup>
+
+        <tr>
+            <th>Parameter</th>
+            <th>Value Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>url</td>
+            <td>URL</td>
+            <td>The endpoint of the resource</td>
+
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Name of the module in the resource</td>
+
+        </tr>
+        <tr>
+            <td>code</td>
+            <td>String</td>
+            <td>Module Code in the resource</td>
+
+        </tr>
+
+        <tr>
+            <td>year</td>
+            <td>Integer</td>
+            <td>In which year the module is carried out, specified by the resource</td>
+        </tr>
+
+        <tr>
+            <td>semester</td>
+            <td>Integer</td>
+            <td>In which semester the module takes place, specified by the resource</td>
+        </tr>
+
+        <tr>
+            <td>course</td>
+            <td>List of URLs</td>
+            <td>A list of endpoints to which course the module takes place in, linking to the course resource.</td>
+        </tr>
+
+        <tr>
+            <td>Faculty</td>
+            <td>URL</td>
+            <td>The endpoint of the faculty supervising the module, specified by the resource.</td>
+        </tr>
+    </table>
+
+</div>
+
+</div>
+<h4 class = "put">PUT Method</h4>
+<div class= "indent">
+
+    <ul>
+        <li><p>Using the PUT method allows you to replace fields of the representations of the module with new values, giving a <b>200 OK</b> response if the call is successful.</p></li>
+        <li><p>In the body of the request, you can include fields with the values you wish to change them to, like in the request below. The format of the body is further detailed in the Options section. </p></li>
+    </ul>
+
+    
+<h5>A request to modify a module</h5>
+<img src="images/putBody1.PNG" alt="The request with fields that should be changed in the module rep">
+
+<h5>A successful response</h5>
+<img src="images/putResponse.PNG" alt="The response shows the updated module">
+
+<ul>
+    <li><p>If incorrect authentication is provided, a <b>403 Forbidden</b> response is returned. If no authentication header is included a <b>401 Unauthorised</b> code is returned. Additionally, if the request body cannot be parsed correctly or specified fields aren't filled in the request body, a <b>400 Bad request</b> is returned and the URI remains unchanged. The response body also replies with any fields that must be included in the request body. </p></li>
+    <li><p>If any values are out of range e.g a year not being less than or equal to five, a <b>400 Bad Request</b> response is given.</p></li>
+</ul>
+
+
+
+<h5>A response to a bad PUT request</h5>
+<img src="images/putBad.PNG" alt="The response body asks for fields not specified in request">
+
+</div>
+
+<h4 class = "patch">PATCH Method</h4>
+<div class= "indent">
+
+    <ul>
+        <li><p>Using the patch method allows you to replace values in the representation with new values.</p></li>
+        <li><p>The server responds with a <b>200 OK</b> response code and updates the URI if the call is successful.</p></li>
+        <li></li>
+    </ul>
+ 
+    PATCH does not require any fields to be present in the request body, but it still retains the same constraints to the fields that are included as PUT (Which is given in the body of an OPTIONS request), such as the semester field data having an integer value between 1 and 2.
+If these constraints are not met, the server will respond with a 400 Bad request code, and no data will be changed in the resource. The response body will also include an error message, for example saying "A valid integer is required" if the semester field is entered as a string "two".</p>
+
+<h5>Example Patch Body</h5>
+
+<img src="images/patchBod.PNG" alt="The patch request body with fields that want to be changed">
+
+<h5>Body showing Successful Patch</h5>
+
+<img src="images/patchNew.PNG" alt="The response body showing the updated module">
+
+<br>
+<h5>Example Bad Patch Body</h5>
+<img src="images/badPatchMod.PNG" alt="The patch request body with fields that want to be changed, having incorrect data.">
+
+<h5>Body showing Failed Patch</h5>
+<img src="images/badPatchRep.PNG" alt="The error message includes a small description on the invalid fields.">
+<p>If incorrect authentication is provided, a <b>403 Forbidden</b> response is returned. Additionally, if the request body cannot be parsed correctly, a <b>400 Bad Request</b> is returned and the URI remains unchanged.</p>
+
+</div>
+<h4 class = "delete">DELETE Method</h4>
+<div class= "indent">
+
+<p>Using the delete method allows you to send a request to delete one of the modules listed. If the server accepts your authentication, the module is removed from the server and a <b>203 No Content Message</b> is returned. The server will keep processing the delete method until it times out.</p>
+<br>
+<p>If no authentication header is added to the delete request, a <b>401 Unauthorised</b> Response code is returned and the module does not get deleted. If you try to delete a module without the correct Authentication, a <b>403 Forbidden</b> response code is returned and the module does not get deleted.</p>
+</div>
+<h4 class = "head">HEAD Method</h4>
+<div class= "indent">
+<p>Using the head method gives a response with no body, including only the headers used by the server response message.
+     </p>
+<br>
+<p>If the value in the <b>{Module id}</b> is not recognised by the API, a <b>404 Not Found</b> Response is given.</p>
+
+<h5>Headers returned</h5>
+<img src="images/headers.PNG" alt="The headers returned by the Header Method">
+
+<p>The headers returned are as follows:</p>
+
+<table class = "centertable">
+    <caption><b>URI Representation Parameters</b></caption>
+
+    <tr>
+        <th>Heading</th>
+        <th>Description</th>
+    </tr>
+
+    <tr>
+        <th>Server</th>
+        <th>The server is run on a nginx webserver.</th>
+    </tr>
+
+    <tr>
+        <th>Date</th>
+        <th>The time the response was sent was on Thursday 9th of November at half 8. </th>
+    </tr>
+
+    <tr>
+        <th>Content-Type</th>
+        <th>The representation body when fetched will be in XML format.</th>
+    </tr>
+
+    <tr>
+        <th>Content-length</th>
+        <th>The representation body has a length of 397 bytes.</th>
+    </tr>
+
+    <tr>
+        <th>Connection</th>
+        <th>The connection between the client and the webserver will stay connected after this request.</th>
+    </tr>
+
+    <tr>
+        <th>Vary</th>
+        <th>The accept value states that the representation returned will be based off what formats the client can accept.</th>
+    </tr>
+
+    <tr>
+        <th>Allow</th>
+        <th>GET, PUT, PATCH, DELETE, HEAD and OPTIONS http methods are all allowed to be used on this resource.</th>
+    </tr>
+
+    <tr>
+        <th>Allow</th>
+        <th>GET, PUT, PATCH, DELETE, HEAD and OPTIONS http methods are all allowed to be used on this resource.</th>
+    </tr>
+
+    <tr>
+        <th>X-Frame-Options</th>
+        <th>Certain html elements like "iframe" are denied from being rendered on the resource page to avoid click-jacking</th>
+    </tr>
+
+    <tr>
+        <th>X-Content-Type-Options</th>
+        <th>Blocks certain requests if they are of type script or style</th>
+    </tr>
+    <tr>
+        <th>Referrer-Policy</th>
+        <th>For same-origin requests the origin and path are sent</th>
+    </tr>
+</table>
+
+</div>
+<h4 class = "options">OPTIONS Method</h4>
+<div class= "indent">
+
+
+<p>Using the OPTIONS method returns the formats of the representations stored in the API Server, which are in JSON, XML and CSV, and a <b>200 OK</b> response if the call is successful.
+     It also gives information about how the body of a data-changing method like PUT or PATCH is parsed, showing that the message can be parsed in JSON, XML, or as CSV text.</p>
+
+
+<br>
+<img src="images/optionsMod.PNG" alt="The body returned by the OPTIONS request">
+<p>If the value in the {Module id} is not recognised by the API, a <b>404 Not Found</b> Response is given.</p>
+
+
+
+
+<h5>Options Response with valid Authorisation</h5>
+
+<img src="images/putValMod.PNG" alt="The body returned by the OPTIONS request with Authentication">
+
+<p>If correct authorisation is provided the options body also includes extra information for a put command that adds some constraints to what can be included in the body of a PUT request.
+    For example, for the url field it is set so it can only be read and not modified, so the client cannot choose the location of where the module is stored.
+     It also gives the types allowed, such as only integers for the year or any value for the url. Each field has a descriptive label, and some fields are required to be inside the PUT request body, such as name, code and faculty.
+     Some fields have restraints on the values they take, for instance with the semester field, it can only take integers between 1 and 2. 
+     If these constraints are not fulfilled in the PUT request, it will not be successful and return a <b>400 Bad Request</b> response.
+</p>
+
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class = "moduleslistsection"> <!--style="text-align:center;"> -->
+
+<h2><center>Format of Module List URI</center></h2>
+
+<h3>List of modules</h3>
+    
+    <p>To request a list of all modules, instead use the URI <p><a href="http://comp3227.ecs.soton.ac.uk/modules">http://comp3227.ecs.soton.ac.uk/modules</a>, excluding the {Module_id} parameter. 
+        Upon this request the webserver returns a resource that lists all the modules that have been created in the service.</p>
+
+<h3>Requests methods and Responses</h3>
+
+
+<p><b>The following Requests are allowed for the endpoint <pre>http://comp3227.ecs.soton.ac.uk/modules:</pre></b></p>
+
+
+
+<ul>
+    <b>
+    <li class = "get">GET</li>
+    <li class = "post">POST</li>
+    <li class = "head">HEAD</li>
+    <li class = "options">OPTIONS</li>
+    </b>
+</ul>
+
+<h4 class = "get">GET Method</h4>
+<div class= "indent">
+<p>Using the get method returns a representation of the module list resource and a <b>200 OK</b> response if the call is successful, as well as the servers headers that they choose to show in their response. </p>
+<p>The representation is given as a list of modules spanning across every valid endpoint http://comp3227.ecs.soton.ac.uk/modules/{module_id}, containing information about the module name, url and code.
+    not all information about the individual module is given, e.g the year and semester it takes place in and the faculty and courses it belongs to.
+
+    
+</p>
+
+<div>
+
+    <h3>Representation Format</h3>
+    <p>The formats allowed for the returned representation are in JSON, XML and a CSV Text table, which can be requested for through an Allow Header in the request headers.
+         The default representation given by the server is in JSON format.
+         If the client requests a representation not stored by the server, e.g ecmascript, then the server responds with a <b>406 Not Acceptable</b> Response code, and details in the response body that
+        the server could not satisfy the request Accept Header.</p>
+    <h5>Response from a GET Request on URI 'http://comp3227.ecs.soton.ac.uk/modules'</h5>
+    <img src="images/getMods.PNG" alt="Example Representation in JSON for URI http://comp3227.ecs.soton.ac.uk/modules">
+
+    <p>The fields in the body of the response are as follows (In JSON Format):</p>
+
+    <table class = "centertable">
+        <caption><b>URI Representation Parameters</b></caption>
+        <colgroup>
+            <col span="1" style="width: 15%;">
+            <col span="1" style="width: 30%;">
+            <col span="1" style="width: 55%;">
+         </colgroup>
+
+        <tr>
+            <th>Parameter</th>
+            <th>Value Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>url</td>
+            <td>String</td>
+            <td>The endpoint of the resource</td>
+
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Name of the module in the resource</td>
+
+        </tr>
+        <tr>
+            <td>code</td>
+            <td>String</td>
+            <td>Module Code in the resource</td>
+
+        </tr>
+    </table>
+
+</div>
+
+<br>
+
+</div>
+<h4 class = "post">POST Method</h4>
+<div class= "indent">
+<p>The POST method allows the client to send a request to create a new URI in the web server. For the request to be successful, 
+    an Authorisation header must be added to the POST request including A string with a Token Value in, formatted as "Token: {Token_Val}". If no authorisation is provided, 
+    the server will Respond with a 401 Unauthorised Code and include a message in the body that says authorisation was not provided. If incorrect authorisation is provided, the server will respond with a 401 Unauthorised code and say that the Token is Invalid. </p>
+
+<p>The POST method requires </p>
+
+
+<h5>A Post Request to make a new module in the server in Postman</h5>
+
+<img src="images/RequestPostman.PNG" alt="Post request">
+
+
+<h5>A Successful Post Response</h5>
+
+<img src="images/Response.PNG" alt="Post response">
+
+<p>If the POST method is accepted by the server, it will respond with a <b>201 Created</b> Response Code, and will display the new representation under a new URI, which is referenced by the url field, in the body in JSON XML or CSV.
+    The Response also includes a location header which tells the client the endpoint that the module resource is stored in. The representation of this module can then be obtained through the endpoint that the server specifies.
+
+</p>
+<br>
+
+
+<h5>Headers returned from Post request</h5>
+<img src="images/postMod2.PNG" alt="The headers returned from a POST Request Response">
+
+<p>The keep alive header maintains a connection between the client and the API server as it is checked 'true'.</p>
+
+
+
+
+</div>
+<h4 class = "head">HEAD Method</h4>
+<div class= "indent">
+<p>Using the head method gives a response with no body, including only the headers used by the server response message. </p>
+<br>
+
+<h5>Headers returned</h5>
+<img src="images/headersMods.PNG" alt="The headers returned by the Header Method on the /modules URI">
+
+<p>The keep alive header maintains a connection between the client and the API server as it is checked 'true'.</p>
+
+</div>
+<h4 class = "options">OPTIONS Method</h4>
+<div class= "indent">
+<p>Using the <span class = "options">OPTIONS</span> method returns the formats of the representations stored in the API Server, and a <b>200 OK</b> response if the call is successful.
+    If the correct authorisation e.g Authorization header with 'Token {Token Val}' is included in the request message, additional information is returned in the response such as the actions that are performed with a <span class = "post">POST</span> request </p>
+<br>
+
+<h5>Options Body without Authorisation</h5>
+
+
+
+<img src="images/optMods.PNG" alt="The body returned by the OPTIONS request without authorisation">
+
+<p>The body shows that the name of the resource is labelled as a list of modules with no description for the description field. 
+    Additionally, it shows that the formats the representation can take are in JSON, XML and CSV in the renders sections and that messages in the client request body are parsed in JSON XML and CSV as well.
+</p>
+
+
+<h5>Options Body with Valid Authorisation</h5>
+
+<img src="images/optValMods.PNG" alt="The body returned by the OPTIONS request without authorisation">
+
+<p>
+    This adds extra information about the settings on the actions that the <span class = "post">POST</span> method is allowed to take. For example it requires a <span class = "post">POST</span> request body
+     to include the field "name", limit the values for the "year" field to between 1 and 5 and limit the string size for the "code" field. It can also set which fields are read_only, meaning they would not replace the field data for that specified field.
+</p>
+
+
+</div>
+</div>
+<br>
+<br>
+
+<div class = "coursessection"> <!--style="text-align:center;"> -->
+
+<h2><center>Course URIs</center></h2>
+
+<table class = "centertable" >
+    <caption><b>URI Parameters</b></caption>
+    <tr>
+        <th>Parameter</th>
+        <th>Meaning</th>
+    </tr>
+    <tr>
+        <td>{Course id} : int</td>
+        <td>The id of the course as ordered in the list of courses stored in the API server. <br> The id can be left out to display a the list of all courses stored on the API server</td>
+    </tr>
+</table>
+
+<p>Example URI: <a href="http://comp3227.ecs.soton.ac.uk/courses/2">http://comp3227.ecs.soton.ac.uk/courses/2</a></p>
+
+
+<div>
+    <h3>Requests methods and Responses</h3>
+    
+    
+    <p><b>The following Requests are allowed for endpoints <pre>http://comp3227.ecs.soton.ac.uk/courses/{Course id}</pre></b></p>
+    
+    <ul>
+        <b>
+        <li class = "get">GET</li>
+        <li class = "head">HEAD</li>
+        <li class = "options">OPTIONS</li>
+        </b>
+    </ul>
+</div>
+
+<h4 class = "get">GET Method</h4>
+<div class= "indent">
+<p>Using the get method returns a representation of a course resource and a <b>200 OK</b> response if the call is successful, as well as the servers headers that they choose to show in their response. </p>
+
+    
+</p>
+
+<div>
+
+    <h3>Representation Format</h3>
+    <p>The formats allowed for the returned representation are in JSON, XML and a CSV Text table, which can be requested for through an Allow Header in the request headers.
+         The default representation given by the server is in JSON format.
+         If the client requests a representation not stored by the server, e.g ecmascript, then the server responds with a <b>406 Not Acceptable</b> Response code, and details in the response body that
+        the server could not satisfy the request Accept Header.</p>
+    <h5>Response from a GET Request on URI 'http://comp3227.ecs.soton.ac.uk/courses/2'</h5>
+    <img src="images/getCourse.PNG" alt="Example Representation in JSON for URI http://comp3227.ecs.soton.ac.uk/courses/2">
+
+    <p>The fields in the body of the response are as follows (In JSON Format):</p>
+    
+    <table class = "centertable">
+        <caption><b>URI Representation Parameters</b></caption>
+        <colgroup>
+            <col span="1" style="width: 15%;">
+            <col span="1" style="width: 30%;">
+            <col span="1" style="width: 55%;">
+         </colgroup>
+
+        <tr>
+            <th>Parameter</th>
+            <th>Value Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>url</td>
+            <td>Field</td>
+            <td>The endpoint of the resource represented as an URL</td>
+
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Name of the course in the resource</td>
+
+        </tr>
+        <tr>
+            <td>code</td>
+            <td>String</td>
+            <td>Course Code in the resource</td>
+
+        </tr>
+
+        <tr>
+            <td>Degree</td>
+            <td>String</td>
+            <td>The degree the course is included in.</td>
+
+        </tr>
+
+        <tr>
+            <td>Faculty</td>
+            <td>Field</td>
+            <td>The faculty that supervises the modules as an URL</td>
+        </tr>
+
+        <tr>
+            <td>Modules</td>
+            <td>List of Fields</td>
+            <td>The modules taking place in this course, represented as URLS</td>
+
+        </tr>
+    </table>
+
+</div>
+</div>
+<h4 class = "head">HEAD Method</h4>
+<div class= "indent">
+<p>Using the head method gives a response with no body, including only the headers used by the server response message. </p>
+<br>
+
+<h5>Headers returned for URI http://comp3227.ecs.soton.ac.uk/courses/2</h5>
+<img src="images/headerCourse.PNG" alt="The headers returned by the Header Method on the /modules URI">
+
+<p>The keep alive header maintains a connection between the client and the API server as it is checked 'true'.</p>
+</div>
+
+<h4 class = "options">OPTIONS Method</h4>
+<div class= "indent">
+<p>Using the <span class = "options">OPTIONS</span> method returns the formats of the representations stored in the API Server, and a <b>200 OK</b> response if the call is successful.
+    </p>
+<br>
+
+<h5>Options Body for URL http://comp3227.ecs.soton.ac.uk/courses/2</h5>
+
+
+
+<img src="images/optCourse.PNG" alt="The body returned by the OPTIONS request">
+
+<p>The body shows that the name of the resource is labelled as course by id with no description for the description field. 
+    Additionally, it shows that the formats the representation can take are in JSON, XML and CSV in the renders sections and that messages in the client request body are parsed in JSON XML and CSV as well.
+</p>
+
+<p></p>
+</div>
+
+</div>
+
+
+
+
+
+
+<div class = "facultiessection"> <!--style="text-align:center;"> -->
+<h2><center>Faculty URIs</center></h2>
+
+<table class = "centertable">
+    <caption><b>URI Parameters</b></caption>
+    <tr>
+        <th>Parameter</th>
+        <th>Meaning</th>
+    </tr>
+    <tr>
+        <td>{Faculty id} : int</td>
+        <td>The id of the faculty as ordered in the list of faculties stored in the API server. <br> The id can be left out to display a the list of all faculties stored on the API server</td>
+    </tr>
+</table>
+
+<p>Example URI: <a href="http://comp3227.ecs.soton.ac.uk/faculties/2">http://comp3227.ecs.soton.ac.uk/faculties/2</a></p>
+
+<h3>Requests methods and Responses</h3>
+
+
+<p><b>The following Requests are allowed for endpoints <pre>http://comp3227.ecs.soton.ac.uk/faculties/{Faculty id}</pre></b></p>
+
+<ul>
+    <b>
+    <li class = "get">GET</li>
+    <li class = "head">HEAD</li>
+    <li class = "options">OPTIONS</li>
+    </b>
+</ul>
+
+<h4 class = "get">GET Method</h4>
+<div class= "indent">
+<p>Using the get method returns a representation of the module list resource and a <b>200 OK</b> response if the call is successful, as well as the servers headers that they choose to show in their response. </p>
+
+<p>If used on the URI <a href="http://comp3227.ecs.soton.ac.uk/faculties">http://comp3227.ecs.soton.ac.uk/faculties</a>, the server will provide a representation of a list of all the faculties spanning across all valid URLS 'http://comp3227.ecs.soton.ac.uk/faculties/{Faculty id}' as a single representation. </p>
+</p>
+
+<div>
+
+    <h3>Representation Format</h3>
+    <p>The formats allowed for the returned representation are in JSON, XML and a CSV Text table, which can be requested for through an Allow Header in the request headers.
+         The default representation given by the server is in JSON format.
+         If the client requests a representation not stored by the server, e.g ecmascript, then the server responds with a <b>406 Not Acceptable</b> Response code, and details in the response body that
+        the server could not satisfy the request Accept Header.</p>
+    <h5>Response from a GET Request on URI 'http://comp3227.ecs.soton.ac.uk/faculties/1'</h5>
+    <img src="images/getFaculty.PNG" alt="Example Representation in JSON for URI http://comp3227.ecs.soton.ac.uk/faculties/1">
+
+    <p>The fields in the body of the response are as follows (In JSON Format):</p>
+    
+    <table class = "centertable">
+        <caption><b>URI Representation Parameters</b></caption>
+        <colgroup>
+            <col span="1" style="width: 15%;">
+            <col span="1" style="width: 30%;">
+            <col span="1" style="width: 55%;">
+         </colgroup>
+
+        <tr>
+            <th>Parameter</th>
+            <th>Value Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>url</td>
+            <td>Field</td>
+            <td>The endpoint of the faculty resource, represented as an URL</td>
+
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Name of the faculty</td>
+
+
+        </tr>
+    </table>
+    
+    <h5>Response from a GET Request on URI 'http://comp3227.ecs.soton.ac.uk/faculties'</h5>
+    <img src="images/getFacs.PNG" alt="Example Representation in JSON for URI http://comp3227.ecs.soton.ac.uk/faculties">
+    
+    <p>From this, we can see that it is a list comprised of the faculty resources, with the same body format as each invidual resource.
+    There are 5 Faculties in total stored on the web server.</p>
+
+</div>
+</div>
+<h4 class = "head">HEAD Method</h4>
+<div class= "indent">
+<p>Using the head method gives a response with no body, including only the headers used by the server response message. </p>
+<br>
+
+<h5>Headers returned for URI http://comp3227.ecs.soton.ac.uk/faculties/2</h5>
+<img src="images/headerFaculty.PNG" alt="The headers returned by the Header Method on the URI http://comp3227.ecs.soton.ac.uk/faculties/2">
+
+<p>The keep alive header maintains a connection between the client and the API server as it is checked 'true'.</p>
+</div>
+<h4 class = "options">OPTIONS Method</h4>
+<div class= "indent">
+<p>Using the <span class = "options">OPTIONS</span> method returns the formats of the representations stored in the API Server, and a <b>200 OK</b> response if the call is successful. </p>
+<br>
+
+<img src="images/optFaculty.PNG" alt="The body returned by the OPTIONS request">
+
+<p>The body shows that the name of the resource is labelled as a Faculty by an Id with no description for the description field. 
+    Additionally, it shows that the formats the representation can take are in JSON, XML and CSV in the renders sections and that messages in the client request body are parsed in JSON XML and CSV as well, though no data can be changed for the faculty resources.
+</p>
+
+
+<p>If an Options Request for the list of faculties is sent, the response message is similar, except the name field is changed to "Faculty List"</p>
+</div>
+</div>
+</div>
+
+</body>
+</html>

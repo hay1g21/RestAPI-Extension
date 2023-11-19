@@ -1,0 +1,121 @@
+body {background-color: rgb(197, 217, 238);
+  font-family: Calibri;
+}
+
+.lineheightclose{
+  line-height: 5pt;
+}
+
+.introsection{
+  padding-bottom: 50px;
+  padding-left: 20px;
+  background-color:  #f7f6ff;
+}
+
+/* #f7f6ff;
+*/
+
+.modulessection{
+  padding-bottom: 50px;
+  padding-left: 20px;
+  background-color:  #f7f6ff;
+}
+
+.moduleslistsection{
+  padding-bottom: 50px;
+  padding-left: 20px;
+  background-color:  #f7f6ff;
+}
+
+.coursessection{
+  padding-bottom: 50px;
+  padding-left: 20px;
+  background-color:  #f7f6ff;
+}
+
+.facultiessection{
+  padding-bottom: 50px;
+  padding-left: 20px;
+  background-color:  #f7f6ff;
+}
+
+.centertable {
+  /*
+  margin-left: auto;
+  margin-right: auto;
+  */
+}
+
+.indent{
+  margin-left: 20px;
+}
+
+h1 {
+  color: rgb(15, 8, 102);
+  /* !--margin-left: 20px; */
+  text-decoration: blink;
+  font-family: Calibri;
+  font-size: 38px
+
+}
+
+h5 {
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+table, tr, th, td{
+  border: 1px solid;
+  --width: 50%
+
+
+}
+
+
+.flexright {
+  background-color: dodgerblue;
+  padding: 10px;
+  flex: 50%;
+}
+.resize{
+  border: 1px solid;
+  width: 750px;
+  height: auto
+}
+
+.get{
+  color: rgb(15, 0, 175);
+}
+
+.put{
+  color: rgb(96, 0, 175);
+}
+
+.post{
+  color: rgb(175, 70, 0);
+}
+
+.patch{
+  color: rgb(0, 175, 52);
+}
+
+.delete{
+  color: rgb(175, 0, 67);
+}
+
+.head{
+  color: rgb(172, 175, 0);
+}
+
+.options{
+  color: rgb(175, 0, 175);
+}
+
+.border{
+  border: 1px solid;
+}
+
+.bulcenter {
+  display:inline-block;
+}
+
