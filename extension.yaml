@@ -1,0 +1,596 @@
+openapi: 3.0.0
+info:
+  title: Faculty API Extension
+  description: A faculty API, extended to include the ability to add announcements to relevant resources
+  version: 0.1.9
+servers:
+  - url: https://comp3227.ecs.soton.ac.uk
+    description: Live Origin Server, main host 
+paths:
+  /announcements:
+    get:
+      summary: Returns a list of all announcements
+      
+      description:  "A list of all Announcements"
+      tags:
+      - announcements
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Announcement"
+          
+  /announcements/modules:
+    get:
+      summary: Returns a list of all announcements related to modules
+      description:  "List of all announcements related to modules"
+      tags:
+      - announcements
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementModule"
+                  
+    post:
+      summary: "Allows a user to create an announcement relating to modules"
+      description: "Creates an announcement under an url in the announcements/modules path"
+      tags:
+      - announcements
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      requestBody:
+        description: What the post request must include to make a module announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncement'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncement'
+  
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementModule"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementModule"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+                  
+  /announcements/courses:
+    get:
+      summary: Returns a list of all announcements related to courses
+      description:  "List of all announcements related to courses"
+      tags:
+      - announcements
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementCourse"
+                  
+  /reports:
+    get:
+      summary: Returns a list of all announcements
+      description:  "A list of all Announcements"
+      tags:
+      - reports
+      responses:
+        '200':    # status code
+          description: A JSON, HTML, CSV or XML array of reports
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Report"
+                  
+  /reports/{report_id}:
+    get:
+      summary: Returns a list of all reports made on the API
+      description:  "Returns a collection of report identifiers"
+      parameters:
+        - in: path
+          name: report_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+       
+      tags:
+      - reports
+      responses:
+        '200':    # status code
+          description: A JSON, HTML, XML or CSV representation of a report
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Report"
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
+            
+  /appeals:
+    get:
+      summary: Returns a list of all announcements
+      description:  "A list of all Announcements"
+      tags:
+      - reports
+      responses:
+        '200':    # status code
+          description: A JSON, HTML, CSV or XML array of reports
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Report"
+  /appeals/{appeal_id}:
+    get:
+      summary: Returns a university profile 
+      description:  "Returns a collection of profile identifiers"
+      parameters:
+        - in: path
+          name: appeal_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+       
+      tags:
+      - profile
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Profile"
+        '404':
+            #description: "Profile not found not found"
+            $ref: '#/components/responses/NotFound' 
+                  
+  /profiles:
+    get:
+      summary: Returns a list of all university profiles
+      description:  "Returns a collection of profile identifiers"
+      tags:
+      - profile
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Profile"
+
+                  
+  /profiles/{profile_id}:
+    get:
+      summary: Returns a university profile 
+      description:  "Returns a collection of profile identifiers"
+      parameters:
+        - in: path
+          name: profile_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+       
+      tags:
+      - profile
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Profile"
+        '404':
+            #description: "Profile not found not found"
+            $ref: '#/components/responses/NotFound'
+                  
+            
+
+components:
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error404'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error400'
+    BadRequest:
+      description: Request could not be parsed properly
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error401'
+    ForbiddenAuth:
+      description: Invalid Authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error403Invalid'
+    ForbiddenRest:
+      description: User has gone over post limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error403Restricted'        
+            
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://comp3227.ecs.soton.ac.uk/oauth/authorize
+          tokenUrl: https://comp3227.ecs.soton.ac.uk/oauth/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            admin: Grants access to admin operations
+ 
+  schemas:
+    PostAnnouncement:
+      title: The announcement post body
+      type: object
+      properties:
+        title:
+          type: string
+          description: Announcement header
+        target:
+          type: string
+          pattern: 'staff|student'
+          description: Either staff or students
+        modules:
+          type: array
+          items:
+            type: string
+          description: URLS of related modules
+        body:
+          type: string
+          description: The main text of the announcement
+          
+      required:
+        - title
+    Announcement:
+      title: The announcement post body
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to Announcement resource"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/modules/2"
+        title:
+          type: "string"
+          description: "Announcement header"
+          example: "Coursework 1 released"
+        date:
+          type: "string"
+          description: "Date the announcement was posted"
+          example: "15/11/23"
+        Target:
+          type: "string"
+          description: "The target of the announcement, either students or staff"
+          example: "Staff"
+        Creator:
+          type: "string"
+          description: "Link to the profile who made the announcement"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
+        Body:
+          type: "string"
+          description: "Body of the announcement, the main content"
+          example: "Coursework 1 has just been released."
+        status:
+          type: "string"
+          description: "States of the Announcement"
+          enum:
+           - "Created"
+           - "Posted"
+           - "Edited"
+           - "Archived"
+    AnnouncementModule:
+      title: The announcement post body for a module announcement
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to Announcement resource"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/modules/2"
+        title:
+          type: "string"
+          description: "Announcement header"
+          example: "Coursework 1 released"
+        date:
+          type: "string"
+          description: "Date the announcement was posted"
+          example: "15/11/23"
+        Target:
+          type: "string"
+          description: "The target of the announcement, either students or staff"
+          example: "Staff"
+        Creator:
+          type: "string"
+          description: "Link to the profile who made the announcement"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
+        Body:
+          type: "string"
+          description: "Body of the announcement, the main content"
+          example: "Coursework 1 has just been released."
+        RelatedModules:
+          type: "array"
+          description: "A list of relevant modules that the announcement will be added to"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/modules/1"
+           - "https://comp3227.ecs.soton.ac.uk/modules/2"
+        status:
+          type: "string"
+          description: "States of the Announcement"
+          enum:
+           - "Created"
+           - "Posted"
+           - "Edited"
+           - "Archived"
+    AnnouncementCourse:
+      title: The announcement post body for a course announcement
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to Announcement resource"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/course/2"
+        title:
+          type: "string"
+          description: "Announcement header"
+          example: "Exam beginning tomorrow"
+        date:
+          type: "string"
+          description: "Date the announcement was posted"
+          example: "15/01/24"
+        Target:
+          type: "string"
+          description: "The target of the announcement, either students or staff"
+          example: "Students"
+        Creator:
+          type: "string"
+          description: "Link to the profile who made the announcement"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/6"
+        Body:
+          type: "string"
+          description: "Body of the announcement, the main content"
+          example: "An exam has been released. Please look at the relevant info."
+        RelatedModules:
+          type: "array"
+          description: "A list of relevant courses that the announcement will be added to"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/courses/6"
+        status:
+          type: "string"
+          description: "States of the Announcement"
+          enum:
+           - "Created"
+           - "Posted"
+           - "Edited"
+           - "Archived"
+    AnnouncementFaculty:
+      title: The announcement post body for a faculty announcement
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to Announcement resource"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/faculty/2"
+        title:
+          type: "string"
+          description: "Announcement header"
+          example: "ECS congratulates new graduates"
+        date:
+          type: "string"
+          description: "Date the announcement was posted"
+          example: "15/01/24"
+        Target:
+          type: "string"
+          description: "The target of the announcement, either students or staff"
+          example: "Students"
+        Creator:
+          type: "string"
+          description: "Link to the profile who made the announcement"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
+        Body:
+          type: "string"
+          description: "Body of the announcement, the main content"
+          example: "An exam has been released. Please look at the relevant info."
+        RelatedModules:
+          type: "array"
+          description: "A list of relevant faculties that the announcement will be added to"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/faculties/2"
+        status:
+          type: "string"
+          description: "States of the Announcement"
+          enum:
+           - "Created"
+           - "Posted"
+           - "Edited"
+           - "Archived"
+    Report:
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to report resource"
+          example: "<https://comp3227.ecs.soton.ac.uk/report/1"
+        subject:
+          type: "string"
+          description: "Brief Reason for the report"
+          example: "Spamming Announcements"
+        date:
+          type: "string"
+          description: "Date the report was made"
+          example: "15/11/23"
+        Perpetrator:
+          type: "string"
+          description: "Link to the profile who is being reported"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/4"
+        Reporter:
+          type: "string"
+          description: "Link to the profile who made the report"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/6"
+        status:
+          type: "string"
+          description: "States of the report"
+          enum:
+           - "Open"
+           - "Closed"
+        reports:
+          type: "string"
+          description: "Path to the reports made on the user"
+          example: https://comp3227.ecs.soton.ac.uk/profile/4/reports
+    Appeal:
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to appeal resource"
+          example: "<https://comp3227.ecs.soton.ac.uk/appeal/1"
+        subject:
+          type: "string"
+          description: "Appeal heading"
+          example: "Appeal to return announcement posting."
+        date:
+          type: "string"
+          description: "Date the appealwas made"
+          example: "17/11/23"
+        Appealer:
+          type: "string"
+          description: "Link to the profile who is appealing"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
+        Body:
+          type: "string"
+          description: "Body containing written appeal"
+          example: "I would like to be able to post announcements again, I will not spam announcements."
+        status:
+          type: "string"
+          description: "States of the report"
+          enum:
+           - "Open"
+           - "Approved"
+           - "Denied"
+        reports:
+          type: array
+          description: "Path to the reports made on the user"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/reports/1"
+           - "https://comp3227.ecs.soton.ac.uk/reports/2"
+    Profile:
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to profile resource"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/4"
+        id:
+          type: "string"
+          description: "Student email id"
+          example: "gut6s21"
+        name:
+          type: "string"
+          description: "Full name of student"
+          example: Schierke Elfhelm
+        role:
+          type: "string"
+          description: "If the profile is a staff member or student"
+          example: Student
+        status:
+          type: "string"
+          description: "States of the profile"
+          enum:
+           - "Restricted"
+           - "Available"
+        reports:
+          type: "string"
+          description: "Path to the reports made on the user"
+          example: https://comp3227.ecs.soton.ac.uk/profile/4/reports
+    error400:
+      type: string
+      example: 'Bad Request'
+    error404:
+      type: string
+      example: 'Page not found!'
+    error401:
+      type: string
+      example: 'Unauthorised, please include an authorisation token in your request'
+    error403Invalid:
+      type: string
+      example: 'Invalid Authentication.'
+    error403Restricted:
+      type: string
+      example: 'Unable to create post due to being restricted.'
+
+
+tags:
+  - name: announcements
+    description: All announcement sections
+
+  - name: reports
+    description: Report section
+    
+  - name: profile
+    description: Info about the profile
+    
+  - name: Old URI changes
+    description: Changes to the module, faculty and course URIs
