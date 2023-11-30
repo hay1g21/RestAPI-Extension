@@ -179,12 +179,20 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The module ID
       tags:
       - announcements
       responses:
         '200':    # status code
           description: A JSON representation of a module
+          links:
+            deleteResource:
+              operationId: deleteModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `DELETE announcements/modules/{module_Id}`.
           content:
             application/json:
               schema: 
@@ -197,6 +205,7 @@ paths:
     delete:
       summary: Deletes the announcement URI
       description:  "Removes the endpoints for a module announcement resource"
+      operationId: deleteModuleAnnouncement
       parameters:
         - in: path
           name: module_id   # Note the name is the same as in the path
@@ -204,7 +213,7 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The module ID
       tags:
       - announcements
       responses:
@@ -239,7 +248,7 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The module ID
       requestBody:
         description: What the post request must include to make a module announcement
         required: true
@@ -261,6 +270,14 @@ paths:
               description: >
                 The `id` value returned in the response can be used as
                 the `userId` parameter in `GET announcements/modules/{module_Id}`.
+                
+            deleteResource:
+              operationId: deleteModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `DELETE announcements/modules/{module_Id}`.
           content:
             application/json:
               schema: 
@@ -297,7 +314,7 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The module ID
       tags:
       - announcements
       responses:
@@ -319,7 +336,7 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The module ID
       tags:
       - announcements
       responses:
@@ -380,7 +397,7 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The report ID
        
       tags:
       - reports
@@ -421,7 +438,7 @@ paths:
           schema:
             type: integer
             minimum: 1
-          description: The profile ID
+          description: The appeal ID
        
       tags:
       - appeals
@@ -451,12 +468,101 @@ paths:
                 type: array
                 items: 
                   $ref: "#/components/schemas/Profile"
+    post:
+      summary: "Allows a staff member to create a profile"
+      description: "Creates a profile under an url in the /profiles path"
+      tags:
+      - profile
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      requestBody:
+        description: What the post request must include to make a module announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostProfile'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostProfile'
+  
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getProfile
+              parameters: 
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profileId` parameter in `GET announcements/profile`.
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Profile"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/Profile"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the profile list uri"
+      description: "This endpoint returns the allowed methods for the profile list."
+      tags:
+      - profile
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+              
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the uri"
+      description: "This endpoint returns the headers relating to the uri."
+      tags:
+      - profile
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
 
                   
   /profiles/{profile_id}:
     get:
       summary: Returns a university profile 
       description:  "Returns a profile resource by identifier"
+      operationId: getProfile
       parameters:
         - in: path
           name: profile_id   # Note the name is the same as in the path
@@ -478,6 +584,118 @@ paths:
         '404':
             #description: "Profile not found not found"
             $ref: '#/components/responses/NotFound'
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the uri"
+      description: "This endpoint returns the allowed methods for uri."
+      parameters:
+        - in: path
+          name: profile_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      tags:
+      - profile
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT"
+              description: "List of allowed methods"      
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the uri"
+      description: "This endpoint returns the headers relating to the uri."
+      parameters:
+        - in: path
+          name: profile_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      tags:
+      - profile
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD"
+              description: "List of allowed methods"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+          
+    put: #put 
+      summary: "Allows a staff member to update a student profile"
+      description: "Updates the resource in the endpoint for a profile"
+      tags:
+      - profile
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: path
+          name: profile_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      requestBody:
+        description: What the put request must include to update a profile
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutProfile'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PutProfile'
+      responses:
+        '200':    # status code
+          description: An updated representation is returned
+          links:
+            getCreatedResource:
+              operationId: getProfile
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profile_Id` parameter in `GET profiles/{profile_id}`.
+                
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Profile"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/Profile"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
                   
             
 
@@ -557,6 +775,82 @@ components:
           
       required:
         - title
+        - body
+        - modules
+        - target
+    PostAppeal:
+      title: Fields for an appeal post request
+      properties:
+        url:
+          type: "string"
+          description: "Link to appeal resource"
+          example: "<https://comp3227.ecs.soton.ac.uk/appeal/1"
+        id:
+          type: "integer"
+          description: "ID of the appeal"
+          example: 2
+        subject:
+          type: "string"
+          description: "Appeal heading"
+          example: "Appeal to return announcement posting."
+        date:
+          type: "string"
+          description: "Date the appealwas made"
+          example: "17/11/23"
+        Appealer:
+          type: "string"
+          description: "Link to the profile who is appealing"
+          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
+        Body:
+          type: "string"
+          description: "Body containing written appeal"
+          example: "I would like to be able to post announcements again, I will not spam announcements."
+          
+      
+    PostProfile:
+      title: The fields for a profile put request
+      type: object
+      properties:
+        studentid:
+          type: "string"
+          description: "Student email id"
+          example: "gut6s21"
+        name:
+          type: "string"
+          description: "Full name of student"
+          example: Schierke Elfhelm
+        role:
+          type: "string"
+          description: "If the profile is a staff member or student"
+          example: Student
+          
+          
+      required:
+       - studentid
+       - name
+       - role
+    PutProfile:
+      title: The fields for a profile put request
+      type: object
+      properties:
+        status:
+          type: string
+          description: Posting status of the student
+          example: "Restricted"
+          pattern: 'Permitted|Restricted'
+        role:
+          type: string
+          description: The role of the student
+          example: "Student"
+          pattern: 'Staff|Student'
+        name:
+          type: string
+          description: The name of the student
+          example: "Schierke Elfhelm"
+          
+          
+      required:
+       - status
     Announcement:
       title: The announcement post body
       type: "object"
@@ -603,7 +897,7 @@ components:
           example: "https://comp3227.ecs.soton.ac.uk/announcements/modules/2"
         id:
           type: "integer"
-          description: "ID of the created announcement"
+          description: "ID of the module announcement"
           example: 2
         title:
           type: "string"
@@ -651,7 +945,7 @@ components:
           example: "https://comp3227.ecs.soton.ac.uk/announcements/course/2"
         id:
           type: "integer"
-          description: "ID of the created announcement"
+          description: "ID of the course announcement"
           example: 2
         title:
           type: "string"
@@ -698,7 +992,7 @@ components:
           example: "https://comp3227.ecs.soton.ac.uk/announcements/faculty/2"
         id:
           type: "integer"
-          description: "ID of the created announcement"
+          description: "ID of the faculty announcement"
           example: 2
         title:
           type: "string"
@@ -742,6 +1036,10 @@ components:
           type: "string"
           description: "Link to report resource"
           example: "<https://comp3227.ecs.soton.ac.uk/report/1"
+        id:
+          type: "integer"
+          description: "ID of the report"
+          example: 2
         subject:
           type: "string"
           description: "Brief Reason for the report"
@@ -775,6 +1073,10 @@ components:
           type: "string"
           description: "Link to appeal resource"
           example: "<https://comp3227.ecs.soton.ac.uk/appeal/1"
+        id:
+          type: "integer"
+          description: "ID of the appeal"
+          example: 2
         subject:
           type: "string"
           description: "Appeal heading"
@@ -806,6 +1108,8 @@ components:
           example:
            - "https://comp3227.ecs.soton.ac.uk/reports/1"
            - "https://comp3227.ecs.soton.ac.uk/reports/2"
+    
+      
     Profile:
       type: "object"
       properties:
@@ -814,6 +1118,10 @@ components:
           description: "Link to profile resource"
           example: "https://comp3227.ecs.soton.ac.uk/profile/4"
         id:
+          type: "integer"
+          description: "ID of the profile"
+          example: 2
+        studentid:
           type: "string"
           description: "Student email id"
           example: "gut6s21"
