@@ -3,6 +3,7 @@ info:
   title: Faculty API Extension
   description: A faculty API, extended to include the ability to add announcements to relevant resources
   version: 0.1.9
+
 servers:
   - url: https://comp3227.ecs.soton.ac.uk
     description: Live Origin Server, main host 
@@ -11,7 +12,7 @@ paths:
     get:
       summary: Returns a list of all announcements
       
-      description:  "A list of all Announcements"
+      description:  "A collection of all Announcements"
       tags:
       - announcements
       responses:
@@ -23,11 +24,46 @@ paths:
                 type: array
                 items: 
                   $ref: "#/components/schemas/Announcement"
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the announcements uri"
+      description: "This endpoint returns the allowed methods for the announcements."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD"
+              description: "List of allowed methods"
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the uri"
+      description: "This endpoint returns the headers relating to the uri."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD"
+              description: "List of allowed methods"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+             
+
           
   /announcements/modules:
     get:
       summary: Returns a list of all announcements related to modules
-      description:  "List of all announcements related to modules"
+      description:  "Collection of all announcements related to modules"
       tags:
       - announcements
       responses:
@@ -41,8 +77,8 @@ paths:
                   $ref: "#/components/schemas/AnnouncementModule"
                   
     post:
-      summary: "Allows a user to create an announcement relating to modules"
-      description: "Creates an announcement under an url in the announcements/modules path"
+      summary: "Allows a user to create an announcement relating to modules under a uri"
+      description: "Creates a module announcement under an url in the announcements/modules path"
       tags:
       - announcements
       security:
@@ -61,6 +97,14 @@ paths:
       responses:
         '201':    # status code
           description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `GET announcements/modules/{module_Id}`.
           content:
             application/json:
               schema: 
@@ -86,7 +130,213 @@ paths:
         '400':
             #description: "Report not found"   
             $ref: '#/components/responses/BadRequest'
+            
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the announcements uri"
+      description: "This endpoint returns the allowed methods for the announcements."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+              
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the uri"
+      description: "This endpoint returns the headers relating to the uri."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
                   
+  
+  /announcements/modules/{module_id}:
+    get:
+      summary: Returns a specific announcement module resource 
+      description:  "An announcement module resource by identifier"
+      operationId: getModuleAnnouncement
+      parameters:
+        - in: path
+          name: module_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      tags:
+      - announcements
+      responses:
+        '200':    # status code
+          description: A JSON representation of a module
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/AnnouncementModule"
+            application/xml:
+            
+              schema:
+                  $ref: "#/components/schemas/AnnouncementModule"
+      
+    delete:
+      summary: Deletes the announcement URI
+      description:  "Removes the endpoints for a module announcement resource"
+      parameters:
+        - in: path
+          name: module_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      tags:
+      - announcements
+      responses:
+        '204':
+          description: "No content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/code204'
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
+    put: #put 
+      summary: "Allows a user to update an announcement relating to modules"
+      description: "Updates the resource in the endpoint for an announcements/modules path"
+      tags:
+      - announcements
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: path
+          name: module_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      requestBody:
+        description: What the post request must include to make a module announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncement'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncement'
+      responses:
+        '200':    # status code
+          description: An updated representation is returned
+          links:
+            getCreatedResource:
+              operationId: getModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `GET announcements/modules/{module_Id}`.
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementModule"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementModule"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+      
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the uri"
+      description: "This endpoint returns the allowed methods for uri."
+      parameters:
+        - in: path
+          name: module_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"      
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the uri"
+      description: "This endpoint returns the headers relating to the uri."
+      parameters:
+        - in: path
+          name: module_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD"
+              description: "List of allowed methods"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+  
   /announcements/courses:
     get:
       summary: Returns a list of all announcements related to courses
@@ -150,7 +400,7 @@ paths:
       summary: Returns a list of all announcements
       description:  "A list of all Announcements"
       tags:
-      - reports
+      - appeals
       responses:
         '200':    # status code
           description: A JSON, HTML, CSV or XML array of reports
@@ -159,11 +409,11 @@ paths:
               schema: 
                 type: array
                 items: 
-                  $ref: "#/components/schemas/Report"
+                  $ref: "#/components/schemas/Appeal"
   /appeals/{appeal_id}:
     get:
-      summary: Returns a university profile 
-      description:  "Returns a collection of profile identifiers"
+      summary: Returns a specific announcement module resource 
+      description:  "Returns an appeal resource by identifier"
       parameters:
         - in: path
           name: appeal_id   # Note the name is the same as in the path
@@ -174,14 +424,14 @@ paths:
           description: The profile ID
        
       tags:
-      - profile
+      - appeals
       responses:
         '200':    # status code
           description: A JSON array of user names
           content:
             application/json:
               schema: 
-                $ref: "#/components/schemas/Profile"
+                $ref: "#/components/schemas/Appeal"
         '404':
             #description: "Profile not found not found"
             $ref: '#/components/responses/NotFound' 
@@ -206,7 +456,7 @@ paths:
   /profiles/{profile_id}:
     get:
       summary: Returns a university profile 
-      description:  "Returns a collection of profile identifiers"
+      description:  "Returns a profile resource by identifier"
       parameters:
         - in: path
           name: profile_id   # Note the name is the same as in the path
@@ -277,6 +527,7 @@ components:
             admin: Grants access to admin operations
  
   schemas:
+    
     PostAnnouncement:
       title: The announcement post body
       type: object
@@ -284,18 +535,25 @@ components:
         title:
           type: string
           description: Announcement header
+          example: "Lecture Hall Flooded"
         target:
           type: string
-          pattern: 'staff|student'
+          pattern: 'staff|student|staff and students'
+          example: "staff and students"
           description: Either staff or students
         modules:
           type: array
           items:
             type: string
           description: URLS of related modules
+          example: 
+          - "https://comp3227.ecs.soton.ac.uk/modules/1"
+          - "https://comp3227.ecs.soton.ac.uk/modules/2" 
         body:
           type: string
           description: The main text of the announcement
+          example: "Do not go into the lecture building today as it is flooded"
+          
           
       required:
         - title
@@ -343,6 +601,10 @@ components:
           type: "string"
           description: "Link to Announcement resource"
           example: "https://comp3227.ecs.soton.ac.uk/announcements/modules/2"
+        id:
+          type: "integer"
+          description: "ID of the created announcement"
+          example: 2
         title:
           type: "string"
           description: "Announcement header"
@@ -387,6 +649,10 @@ components:
           type: "string"
           description: "Link to Announcement resource"
           example: "https://comp3227.ecs.soton.ac.uk/announcements/course/2"
+        id:
+          type: "integer"
+          description: "ID of the created announcement"
+          example: 2
         title:
           type: "string"
           description: "Announcement header"
@@ -430,6 +696,10 @@ components:
           type: "string"
           description: "Link to Announcement resource"
           example: "https://comp3227.ecs.soton.ac.uk/announcements/faculty/2"
+        id:
+          type: "integer"
+          description: "ID of the created announcement"
+          example: 2
         title:
           type: "string"
           description: "Announcement header"
@@ -565,6 +835,9 @@ components:
           type: "string"
           description: "Path to the reports made on the user"
           example: https://comp3227.ecs.soton.ac.uk/profile/4/reports
+    code204:
+      type: string
+      example: 'No content'
     error400:
       type: string
       example: 'Bad Request'
@@ -585,9 +858,15 @@ components:
 tags:
   - name: announcements
     description: All announcement sections
+    
+  - name: module_announcements
+    description: Module Announcements
 
   - name: reports
     description: Report section
+  
+  - name: appeals
+    description: Appeals section
     
   - name: profile
     description: Info about the profile
