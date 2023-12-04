@@ -17,7 +17,7 @@ paths:
       - announcements
       responses:
         '200':    # status code
-          description: A JSON array of user names
+          description: An array of announcements
           content:
             application/json:
               schema: 
@@ -25,7 +25,7 @@ paths:
                 items: 
                   $ref: "#/components/schemas/Announcement"
     options:   # OPTIONS request documentation
-      summary: "Get information about the allowed methods for the announcements uri"
+      summary: "Get information about the allowed methods for the announcements URI"
       description: "This endpoint returns the allowed methods for the announcements."
       tags:
       - announcements
@@ -39,24 +39,64 @@ paths:
                 example: "GET, OPTIONS, HEAD"
               description: "List of allowed methods"
     head:   # OPTIONS request documentation
-      summary: "Get information about the headers for the uri"
-      description: "This endpoint returns the headers relating to the uri."
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
       tags:
       - announcements
       responses:
         200:
           description: "Successful operation"
           headers:
-            Allow:
+            Server:
               schema:
                 type: "string"
-                example: "GET, OPTIONS, HEAD"
-              description: "List of allowed methods"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
             Content-Type:
               schema:
                 type: "string"
                 example: "application/JSON"
               description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
              
 
           
@@ -66,23 +106,47 @@ paths:
       description:  "Collection of all announcements related to modules"
       tags:
       - announcements
+      parameters:
+        - in: query
+          name: target
+          schema:
+            type: string
+            example: "student"
+            pattern: "student|staff|student and staff"
+          description: Display module announcements by which group they are targetted towards
       responses:
         '200':    # status code
-          description: A JSON array of user names
+          description: An array of module announcements
           content:
             application/json:
               schema: 
                 type: array
                 items: 
                   $ref: "#/components/schemas/AnnouncementModule"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementModule"
                   
     post:
-      summary: "Allows a user to create an announcement relating to modules under a uri"
+      summary: "Allows a user to create an announcement relating to modules under a URI"
       description: "Creates a module announcement under an url in the announcements/modules path"
       tags:
       - announcements
       security:
         - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
       requestBody:
         description: What the post request must include to make a module announcement
         required: true
@@ -104,21 +168,34 @@ paths:
                 module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
               description: >
                 The `id` value returned in the response can be used as
-                the `userId` parameter in `GET announcements/modules/{module_Id}`.
+                the `module_id` parameter in `GET announcements/modules/{module_id}`.
+            deleteResource:
+              operationId: deleteModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `module_id` parameter in `DELETE announcements/modules/{module_id}`.
+            updateResource:
+              operationId: putModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `module_id` parameter in `DELETE announcements/modules/{module_id}`.
+          headers:
+            Location:
+              schema:
+                type: "string"
+                example: "https://comp3227.ecs.soton.ac.uk/announcements/modules/2"
+              description: "Where the URL is located"
           content:
             application/json:
               schema: 
-                type: array
-                items: 
-                  $ref: "#/components/schemas/AnnouncementModule"
+                $ref: "#/components/schemas/AnnouncementModule"
             application/xml:
               schema: 
-                type: array
-                xml:
-                  name: root     # <<<
-                 # wrapped: true  # <<<
-                items: 
-                  $ref: "#/components/schemas/AnnouncementModule"
+                $ref: "#/components/schemas/AnnouncementModule"
         '403':    # status code
           description: Forbidden
           content:
@@ -127,12 +204,15 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/error403Invalid'
                   - $ref: '#/components/schemas/error403Restricted'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
         '400':
-            #description: "Report not found"   
+          
             $ref: '#/components/responses/BadRequest'
             
     options:   # OPTIONS request documentation
-      summary: "Get information about the allowed methods for the announcements uri"
+      summary: "Get information about the allowed methods for the announcements URI "
       description: "This endpoint returns the allowed methods for the announcements."
       tags:
       - announcements
@@ -147,24 +227,67 @@ paths:
               description: "List of allowed methods"
               
     head:   # OPTIONS request documentation
-      summary: "Get information about the headers for the uri"
-      description: "This endpoint returns the headers relating to the uri."
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
       tags:
       - announcements
       responses:
         200:
           description: "Successful operation"
           headers:
-            Allow:
+            Server:
               schema:
                 type: "string"
-                example: "GET, OPTIONS, HEAD, POST"
-              description: "List of allowed methods"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
             Content-Type:
               schema:
                 type: "string"
                 example: "application/JSON"
               description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
+            
+            
+            
                   
   
   /announcements/modules/{module_id}:
@@ -184,7 +307,7 @@ paths:
       - announcements
       responses:
         '200':    # status code
-          description: A JSON representation of a module
+          description: A representation of a module
           links:
             deleteResource:
               operationId: deleteModuleAnnouncement
@@ -192,7 +315,14 @@ paths:
                 module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
               description: >
                 The `id` value returned in the response can be used as
-                the `userId` parameter in `DELETE announcements/modules/{module_Id}`.
+                the `module_id` parameter in `DELETE announcements/modules/{module_id}`.
+            updateResource:
+              operationId: putModuleAnnouncement
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `module_id` parameter in `PUT announcements/modules/{module_id}`.
           content:
             application/json:
               schema: 
@@ -214,6 +344,13 @@ paths:
             type: integer
             minimum: 1
           description: The module ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
       tags:
       - announcements
       responses:
@@ -230,13 +367,14 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/error403Invalid'
-                  - $ref: '#/components/schemas/error403Restricted'
+                  - $ref: '#/components/schemas/error403NotStaff'
         '404':
             #description: "Report not found"   
             $ref: '#/components/responses/NotFound'
     put: #put 
       summary: "Allows a user to update an announcement relating to modules"
       description: "Updates the resource in the endpoint for an announcements/modules path"
+      operationId: putModuleAnnouncement
       tags:
       - announcements
       security:
@@ -249,6 +387,13 @@ paths:
             type: integer
             minimum: 1
           description: The module ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
       requestBody:
         description: What the post request must include to make a module announcement
         required: true
@@ -269,15 +414,14 @@ paths:
                 module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
               description: >
                 The `id` value returned in the response can be used as
-                the `userId` parameter in `GET announcements/modules/{module_Id}`.
-                
+                the `module_id` parameter in `GET announcements/modules/{module_id}`.
             deleteResource:
               operationId: deleteModuleAnnouncement
               parameters: 
                 module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
               description: >
                 The `id` value returned in the response can be used as
-                the `userId` parameter in `DELETE announcements/modules/{module_Id}`.
+                the `module_id` parameter in `DELETE announcements/modules/{module_id}`.
           content:
             application/json:
               schema: 
@@ -301,12 +445,14 @@ paths:
                   - $ref: '#/components/schemas/error403Invalid'
                   - $ref: '#/components/schemas/error403Restricted'
         '400':
-            #description: "Report not found"   
             $ref: '#/components/responses/BadRequest'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
       
     options:   # OPTIONS request documentation
-      summary: "Get information about the allowed methods for the uri"
-      description: "This endpoint returns the allowed methods for uri."
+      summary: "Get information about the allowed methods for the URI"
+      description: "This endpoint returns the allowed methods for URI."
       parameters:
         - in: path
           name: module_id   # Note the name is the same as in the path
@@ -327,8 +473,8 @@ paths:
                 example: "GET, OPTIONS, HEAD, PUT, DELETE"
               description: "List of allowed methods"      
     head:   # OPTIONS request documentation
-      summary: "Get information about the headers for the uri"
-      description: "This endpoint returns the headers relating to the uri."
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
       parameters:
         - in: path
           name: module_id   # Note the name is the same as in the path
@@ -343,53 +489,1114 @@ paths:
         200:
           description: "Successful operation"
           headers:
-            Allow:
+            Server:
               schema:
                 type: "string"
-                example: "GET, OPTIONS, HEAD"
-              description: "List of allowed methods"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
             Content-Type:
               schema:
                 type: "string"
                 example: "application/JSON"
               description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
   
   /announcements/courses:
     get:
       summary: Returns a list of all announcements related to courses
-      description:  "List of all announcements related to courses"
+      description:  "Collection of all announcements related to courses"
       tags:
       - announcements
+      parameters:
+        - in: query
+          name: target
+          schema:
+            type: string
+            example: "student"
+            pattern: "student|staff|student and staff"
+          description: Display course announcements by which group they are targetted towards
+        - in: query
+          name: yeargroup
+          schema:
+            type: integer
+            example: 2
+          description: Display course announcements by which year of students in the course they are targetted towards
       responses:
         '200':    # status code
-          description: A JSON array of user names
+          description: An array of course announcements
           content:
             application/json:
               schema: 
                 type: array
                 items: 
                   $ref: "#/components/schemas/AnnouncementCourse"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementCourse"
                   
+    post:
+      summary: "Allows a user to create an announcement relating to courses under a URI"
+      description: "Creates a course announcement under an identifying url in the announcements/courses path"
+      tags:
+      - announcements
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the post request must include to make a course announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementCourse'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementCourse'
+  
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_Id` parameter in `GET announcements/courses/{course_id}`.
+            deleteResource:
+              operationId: deleteCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_Id` parameter in `DELETE announcements/courses/{course_id}`.
+            updateResource:
+              operationId: putCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_Id` parameter in `PUT announcements/courses/{course_id}`.
+          headers:
+            Location:
+              schema:
+                type: "string"
+                example: "https://comp3227.ecs.soton.ac.uk/announcements/courses/2"
+              description: "Where the URL is located"
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/AnnouncementCourse"
+            application/xml:
+              schema: 
+                $ref: "#/components/schemas/AnnouncementCourse"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+        '400':
+          
+            $ref: '#/components/responses/BadRequest'
+            
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the courses URI"
+      description: "This endpoint returns the allowed methods for the course announcements."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+              
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
+              
+              
+  /announcements/courses/{course_id}:
+    get:
+      summary: Returns a specific course announcement resource 
+      description:  "An course announcement resource by identifier"
+      operationId: getCourseAnnouncement
+      parameters:
+        - in: path
+          name: course_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The course ID
+      tags:
+      - announcements
+      responses:
+        '200':    # status code
+          description: A representation of a course announcement
+          links:
+            deleteResource:
+              operationId: deleteCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_id` parameter in `DELETE announcements/courses/{course_id}`.
+            updateResource:
+              operationId: putCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_id` parameter in `PUT announcements/courses/{course_id}`.
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/AnnouncementCourse"
+            application/xml:
+            
+              schema:
+                  $ref: "#/components/schemas/AnnouncementCourse"
+      
+    delete:
+      summary: Deletes the announcement URI
+      description:  "Removes the endpoints for a course announcement resource"
+      operationId: deleteCourseAnnouncement
+      parameters:
+        - in: path
+          name: course_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The course ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      tags:
+      - announcements
+      responses:
+        '204':
+          description: "No content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/code204'
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
+    put: #put 
+      summary: "Allows a user to update an announcement relating to courses"
+      description: "Updates the resource in the endpoint for an announcements/courses path"
+      operationId: putCourseAnnouncement
+      tags:
+      - announcements
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: path
+          name: course_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The module ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the post request must include to update a course announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementCourse'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementCourse'
+      responses:
+        '200':    # status code
+          description: An updated representation is returned
+          links:
+            getCreatedResource:
+              operationId: getCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_id` parameter in `GET announcements/courses/{course_id}`.
+            deleteResource:
+              operationId: deleteCourseAnnouncement
+              parameters: 
+                course_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `course_id` parameter in `DELETE announcements/courses/{course_id}`.
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementCourse"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementCourse"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            $ref: '#/components/responses/BadRequest'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+      
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the URI"
+      description: "This endpoint returns the allowed methods for URI."
+      parameters:
+        - in: path
+          name: course_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The course ID
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"      
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      parameters:
+        - in: path
+          name: course_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The course ID
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
+                  
+  /announcements/faculties:
+    get:
+      summary: Returns a list of all announcements related to faculties
+      description:  "Collection of all announcements related to faculties"
+      tags:
+      - announcements
+      parameters:
+        - in: query
+          name: target
+          schema:
+            type: string
+            example: "student"
+            pattern: "student|staff|student and staff"
+          description: Display faculty announcements by which group they are targetted towards
+      responses:
+        '200':    # status code
+          description: An array of faculty announcements
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementFaculty"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementFaculty"
+                  
+    post:
+      summary: "Allows a user to create an announcement relating to faculties under a URI"
+      description: "Creates a faculty announcement under an identifying url in the announcements/faculty path"
+      tags:
+      - announcements
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the post request must include to make a faculty announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementFaculty'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementFaculty'
+  
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `GET announcements/faculties/{faculty_id}`.
+            deleteResource:
+              operationId: deleteFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `DELETE announcements/faculties/{faculty_id}`.
+            updateResource:
+              operationId: putFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `PUT announcements/faculties/{faculty_id}`.
+          headers:
+            Location:
+              schema:
+                type: "string"
+                example: "https://comp3227.ecs.soton.ac.uk/announcements/faculties/2"
+              description: "Where the URL is located"
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/AnnouncementFaculty"
+            application/xml:
+              schema: 
+                $ref: "#/components/schemas/AnnouncementFaculty"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+        '400':
+          
+            $ref: '#/components/responses/BadRequest'
+            
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the faculty URI"
+      description: "This endpoint returns the allowed methods for the faculty announcements."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+              
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
+                  
+  /announcements/faculties/{faculty_id}:
+    get:
+      summary: Returns a specific faculty announcement resource 
+      description:  "An faculty announcement resource by identifier"
+      operationId: getFacultyAnnouncement
+      parameters:
+        - in: path
+          name: faculty_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The faculty ID
+      tags:
+      - announcements
+      responses:
+        '200':    # status code
+          description: A representation of a faculty announcement
+          links:
+            deleteResource:
+              operationId: deleteFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `DELETE announcements/faculties/{faculty_id}`.
+            updateResource:
+              operationId: putFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `PUT announcements/faculties/{faculty_id}`.
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/AnnouncementFaculty"
+            application/xml:
+            
+              schema:
+                  $ref: "#/components/schemas/AnnouncementFaculty"
+      
+    delete:
+      summary: Deletes the announcement URI
+      description:  "Removes the endpoints for a faculty announcement resource"
+      operationId: deleteFacultyAnnouncement
+      parameters:
+        - in: path
+          name: faculty_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The faculty ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      tags:
+      - announcements
+      responses:
+        '204':
+          description: "No content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/code204'
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
+    put: #put 
+      summary: "Allows a user to update an announcement relating to faculties"
+      description: "Updates the resource in the endpoint for an announcements/faculties path"
+      operationId: putFacultyAnnouncement
+      tags:
+      - announcements
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: path
+          name: faculty_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The module ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the post request must include to update a faculty announcement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementFaculty'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAnnouncementFaculty'
+      responses:
+        '200':    # status code
+          description: An updated representation is returned
+          links:
+            getCreatedResource:
+              operationId: getFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `GET announcements/faculties/{faculty_id}`.
+            deleteResource:
+              operationId: deleteFacultyAnnouncement
+              parameters: 
+                faculty_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `faculty_id` parameter in `DELETE announcements/faculties/{faculty_id}`.
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/AnnouncementFaculty"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/AnnouncementFaculty"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            $ref: '#/components/responses/BadRequest'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+      
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the URI"
+      description: "This endpoint returns the allowed methods for URI."
+      parameters:
+        - in: path
+          name: faculty_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The faculty ID
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"      
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      parameters:
+        - in: path
+          name: faculty_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The faculty ID
+      tags:
+      - announcements
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
   /reports:
     get:
-      summary: Returns a list of all announcements
-      description:  "A list of all Announcements"
+      summary: Returns a list of all reports
+      description:  "A collection of all reports"
       tags:
       - reports
       responses:
         '200':    # status code
-          description: A JSON, HTML, CSV or XML array of reports
+          description: An array of reports
           content:
             application/json:
               schema: 
                 type: array
                 items: 
                   $ref: "#/components/schemas/Report"
-                  
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/Report"
+    post:
+      summary: "Allows a student to create a report"
+      description: "Creates a report under an url in the /reports path"
+      tags:
+      - reports
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the post request must include to create a report
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReport'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostReport'
+  
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getReport
+              parameters: 
+                report_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `report_id` parameter in `GET reports/{report_id}`.
+            updateCreatedResource:
+              operationId: putReport
+              parameters: 
+                report_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `report_id` parameter in `PUT reports/{report_id}`.
+            deleteCreatedResource:
+              operationId: deleteReport
+              parameters: 
+                report_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `report_id` parameter in `DELETE reports/{report_id}`.
+          headers:
+            Location:
+              schema:
+                type: "string"
+                example: "https://comp3227.ecs.soton.ac.uk/reports/1"
+              description: "Where the URL is located"
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/Report"
+            application/xml:
+              schema: 
+                  $ref: "#/components/schemas/Report"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+        '401':
+            $ref: '#/components/responses/Unauthorized'
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the report list URI"
+      description: "This endpoint returns the allowed methods for the report list."
+      tags:
+      - reports
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+              
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      tags:
+      - reports
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
   /reports/{report_id}:
     get:
       summary: Returns a list of all reports made on the API
       description:  "Returns a collection of report identifiers"
+      operationId: getReport
       parameters:
         - in: path
           name: report_id   # Note the name is the same as in the path
@@ -403,7 +1610,7 @@ paths:
       - reports
       responses:
         '200':    # status code
-          description: A JSON, HTML, XML or CSV representation of a report
+          description: A representation of a report
           content:
             application/json:
               schema: 
@@ -411,26 +1618,379 @@ paths:
         '404':
             #description: "Report not found"   
             $ref: '#/components/responses/NotFound'
-            
+    put: #put 
+      summary: "Allows a user to update a report."
+      description: "Updates the resource in the endpoint for a report"
+      operationId: putReport
+      tags:
+      - reports
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: path
+          name: report_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The report ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the put request must include to update a report
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReport'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostReport'
+      responses:
+        '200':    # status code
+          description: An updated representation is returned
+          links:
+            getCreatedResource:
+              operationId: getReport
+              parameters: 
+                report_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `report_id` parameter in `GET reports/{report_id}`.
+            deleteCreatedResource:
+              operationId: deleteReport
+              parameters: 
+                report_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `report_id` parameter in `DELETE reports/{report_id}`.
+                
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/Report"
+            application/xml:
+              schema: 
+                  $ref: "#/components/schemas/Report"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+    delete:
+      summary: Deletes the report URI
+      description:  "Removes the endpoint for a report resource"
+      operationId: deleteReport
+      parameters:
+        - in: path
+          name: report_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The report ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      tags:
+      - reports
+      responses:
+        '204':
+          description: "No content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/code204'
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the URI"
+      description: "This endpoint returns the allowed methods for the URI."
+      parameters:
+        - in: path
+          name: report_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The report ID
+      tags:
+      - reports
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"     
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      parameters:
+        - in: path
+          name: report_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The report ID
+      tags:
+      - reports
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
   /appeals:
     get:
-      summary: Returns a list of all announcements
-      description:  "A list of all Announcements"
+      summary: Returns a list of all appeals
+      description:  "A collection of all appeals"
       tags:
       - appeals
       responses:
         '200':    # status code
-          description: A JSON, HTML, CSV or XML array of reports
+          description: An array of appeals
           content:
             application/json:
               schema: 
                 type: array
                 items: 
                   $ref: "#/components/schemas/Appeal"
+            application/xml:
+              schema: 
+                type: array
+                xml:
+                  name: root     # <<<
+                 # wrapped: true  # <<<
+                items: 
+                  $ref: "#/components/schemas/Appeal"
+    post:
+      summary: "Allows a staff member to create an appeal"
+      description: "Creates a profile under an url in the /appeals path"
+      tags:
+      - appeals
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the post request must include to create an appeal
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAppeal'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostAppeal'
+  
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getAppeal
+              parameters: 
+                appeal_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `appeal_id` parameter in `GET appeals/{appeal_id}`.
+            updateCreatedResource:
+              operationId: putAppeal
+              parameters: 
+                appeal_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `appeal_id` parameter in `PUT appeals/{appeal_id}`.
+          headers:
+            Location:
+              schema:
+                type: "string"
+                example: "https://comp3227.ecs.soton.ac.uk/appeals/5"
+              description: "Where the URL is located"
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/Appeal"
+            application/xml:
+              schema: 
+                  $ref: "#/components/schemas/Appeal"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403Restricted'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+        '401':
+            $ref: '#/components/responses/Unauthorized'
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the appeal list URI"
+      description: "This endpoint returns the allowed methods for the appeal list."
+      tags:
+      - appeals
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+              
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      tags:
+      - appeals
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
   /appeals/{appeal_id}:
     get:
-      summary: Returns a specific announcement module resource 
+      summary: Returns a specific appeal resource 
       description:  "Returns an appeal resource by identifier"
+      operationId: getAppeal
       parameters:
         - in: path
           name: appeal_id   # Note the name is the same as in the path
@@ -444,14 +2004,212 @@ paths:
       - appeals
       responses:
         '200':    # status code
-          description: A JSON array of user names
+          description: A representation of an appeal
           content:
             application/json:
               schema: 
                 $ref: "#/components/schemas/Appeal"
+            application/xml:
+              schema: 
+                  $ref: "#/components/schemas/Appeal"
         '404':
             #description: "Profile not found not found"
-            $ref: '#/components/responses/NotFound' 
+            $ref: '#/components/responses/NotFound'
+    put: #put 
+      summary: "Allows a user to update an appeal, and a staff member to approve or deny an appeal."
+      description: "Updates the resource in the endpoint for an appeal"
+      operationId: putAppeal
+      tags:
+      - appeals
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      parameters:
+        - in: path
+          name: appeal_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The appeal ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      requestBody:
+        description: What the put request must include to update an appeal
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutAppeal'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PutAppeal'
+      responses:
+        '200':    # status code
+          description: An updated representation is returned
+          links:
+            getCreatedResource:
+              operationId: getAppeal
+              parameters: 
+                appeal_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `appeal_Id` parameter in `GET appeals/{appeal_id}`.
+            deleteCreatedResource:
+              operationId: deleteAppeal
+              parameters: 
+                appeal_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `appeal_Id` parameter in `DELETE appeals/{appeal_id}`.
+                
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/Appeal"
+            application/xml:
+              schema: 
+                  $ref: "#/components/schemas/Appeal"
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '400':
+            #description: "Report not found"   
+            $ref: '#/components/responses/BadRequest'
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+    delete:
+      summary: Deletes the appeal URI
+      description:  "Removes the endpoint for an appeal resource"
+      operationId: deleteAppeal
+      parameters:
+        - in: path
+          name: appeal_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The appeal ID
+      tags:
+      - appeals
+      responses:
+        '204':
+          description: "No content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/code204'
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
+    options:   # OPTIONS request documentation
+      summary: "Get information about the allowed methods for the URI"
+      description: "This endpoint returns the allowed methods for the URI."
+      parameters:
+        - in: path
+          name: appeal_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The appeal ID
+      tags:
+      - appeals
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"      
+    head:   # OPTIONS request documentation
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
+      parameters:
+        - in: path
+          name: appeal_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The appeal ID
+      tags:
+      - appeals
+      responses:
+        200:
+          description: "Successful operation"
+          headers:
+            Server:
+              schema:
+                type: "string"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
+            Content-Type:
+              schema:
+                type: "string"
+                example: "application/JSON"
+              description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
+    
                   
   /profiles:
     get:
@@ -461,42 +2219,7 @@ paths:
       - profile
       responses:
         '200':    # status code
-          description: A JSON array of user names
-          content:
-            application/json:
-              schema: 
-                type: array
-                items: 
-                  $ref: "#/components/schemas/Profile"
-    post:
-      summary: "Allows a staff member to create a profile"
-      description: "Creates a profile under an url in the /profiles path"
-      tags:
-      - profile
-      security:
-        - OAuth2: [write]   # Use OAuth with a different scope
-      requestBody:
-        description: What the post request must include to make a module announcement
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PostProfile'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/PostProfile'
-  
-      responses:
-        '201':    # status code
-          description: A representation of the newly created resource
-          links:
-            getCreatedResource:
-              operationId: getProfile
-              parameters: 
-                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
-              description: >
-                The `id` value returned in the response can be used as
-                the `profileId` parameter in `GET announcements/profile`.
+          description: An array of profiles
           content:
             application/json:
               schema: 
@@ -511,6 +2234,62 @@ paths:
                  # wrapped: true  # <<<
                 items: 
                   $ref: "#/components/schemas/Profile"
+    post:
+      summary: "Allows a staff member to create a profile"
+      description: "Creates a profile under an url in the /profiles path"
+      tags:
+      - profile
+      security:
+        - OAuth2: [write]   # Use OAuth with a different scope
+      requestBody:
+        description: What the post request must include to create a profile
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostProfile'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PostProfile'
+      parameters:
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      responses:
+        '201':    # status code
+          description: A representation of the newly created resource
+          links:
+            getCreatedResource:
+              operationId: getProfile
+              parameters: 
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profile_id` parameter in `GET profiles/{profile_id}`.
+            updateCreatedResource:
+              operationId: putProfile
+              parameters: 
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profile_id` parameter in `PUT profiles/{profile_id}`.
+          headers:
+            Location:
+              schema:
+                type: "string"
+                example: "https://comp3227.ecs.soton.ac.uk/profiles/4"
+              description: "Where the URL is located"
+          content:
+            application/json:
+              schema: 
+                  $ref: "#/components/schemas/Profile"
+            application/xml:
+              schema: 
+                  $ref: "#/components/schemas/Profile"
         '403':    # status code
           description: Forbidden
           content:
@@ -518,12 +2297,14 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/error403Invalid'
-                  - $ref: '#/components/schemas/error403Restricted'
+                  - $ref: '#/components/schemas/error403NotStaff'
         '400':
             #description: "Report not found"   
             $ref: '#/components/responses/BadRequest'
+        '401':
+            $ref: '#/components/responses/Unauthorized'
     options:   # OPTIONS request documentation
-      summary: "Get information about the allowed methods for the profile list uri"
+      summary: "Get information about the allowed methods for the profile list URI"
       description: "This endpoint returns the allowed methods for the profile list."
       tags:
       - profile
@@ -538,29 +2319,69 @@ paths:
               description: "List of allowed methods"
               
     head:   # OPTIONS request documentation
-      summary: "Get information about the headers for the uri"
-      description: "This endpoint returns the headers relating to the uri."
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
       tags:
       - profile
       responses:
         200:
           description: "Successful operation"
           headers:
-            Allow:
+            Server:
               schema:
                 type: "string"
-                example: "GET, OPTIONS, HEAD, POST"
-              description: "List of allowed methods"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
             Content-Type:
               schema:
                 type: "string"
                 example: "application/JSON"
               description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, POST"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
 
                   
   /profiles/{profile_id}:
     get:
-      summary: Returns a university profile 
+      summary: Returns a university profile. Each profile is associated with an authentication token.
       description:  "Returns a profile resource by identifier"
       operationId: getProfile
       parameters:
@@ -574,19 +2395,38 @@ paths:
        
       tags:
       - profile
+      
       responses:
         '200':    # status code
-          description: A JSON array of user names
+          description: A representation of a profile resource
+          links:
+            deleteCreatedResource:
+              operationId: deleteProfile
+              parameters: 
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profile_Id` parameter in `DELETE profiles/{profile_id}`.
+            updateCreatedResource:
+              operationId: putProfile
+              parameters: 
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profile_Id` parameter in `PUT profiles/{profile_id}`.
           content:
             application/json:
               schema: 
                 $ref: "#/components/schemas/Profile"
+            application/xml:
+            
+              schema:
+                  $ref: "#/components/schemas/Profile"
         '404':
-            #description: "Profile not found not found"
             $ref: '#/components/responses/NotFound'
     options:   # OPTIONS request documentation
-      summary: "Get information about the allowed methods for the uri"
-      description: "This endpoint returns the allowed methods for uri."
+      summary: "Get information about the allowed methods for the URI"
+      description: "This endpoint returns the allowed methods for the URI."
       parameters:
         - in: path
           name: profile_id   # Note the name is the same as in the path
@@ -607,8 +2447,8 @@ paths:
                 example: "GET, OPTIONS, HEAD, PUT"
               description: "List of allowed methods"      
     head:   # OPTIONS request documentation
-      summary: "Get information about the headers for the uri"
-      description: "This endpoint returns the headers relating to the uri."
+      summary: "Get information about the headers for the URI"
+      description: "This endpoint returns the headers relating to the URI."
       parameters:
         - in: path
           name: profile_id   # Note the name is the same as in the path
@@ -623,20 +2463,61 @@ paths:
         200:
           description: "Successful operation"
           headers:
-            Allow:
+            Server:
               schema:
                 type: "string"
-                example: "GET, OPTIONS, HEAD"
-              description: "List of allowed methods"
+                example: "nginx/1.20.1"
+              description: "The software used by the server"
+            Date:
+              schema:
+                type: "string"
+                example: "Mon, 04 Dec 2023 17:56:11 GMT"
+              description: "Time the response was sent"
             Content-Type:
               schema:
                 type: "string"
                 example: "application/JSON"
               description: "The returned format of the resource"
+            Content_length:
+              schema:
+                type: integer
+                example: 322
+              description: "Length of representation body in bytes"
+            Connection:
+              schema:
+                type: "string"
+                example: "keep-alive"
+              description: "The type of connection between the client and webserver"
+            Vary:
+              schema:
+                type: "string"
+                example: "Accept"
+              description: "Describes extra influence of content in the request"
+            Allow:
+              schema:
+                type: "string"
+                example: "GET, OPTIONS, HEAD, PUT, DELETE"
+              description: "List of allowed methods"
+            X-Frame-Options:
+              schema:
+                type: "string"
+                example: "DENY"
+              description: "Restrictions on iframe html elements in resource"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+                example: "nosniff"
+              description: "Allows or blocks certain types of requests"
+            Referrer-Policy:
+              schema:
+                type: "string"
+                example: "same-origin"
+              description: "Controls how much referrer info is sent in  requests"
           
     put: #put 
       summary: "Allows a staff member to update a student profile"
       description: "Updates the resource in the endpoint for a profile"
+      operationId: putProfile
       tags:
       - profile
       security:
@@ -649,6 +2530,13 @@ paths:
             type: integer
             minimum: 1
           description: The profile ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
       requestBody:
         description: What the put request must include to update a profile
         required: true
@@ -666,22 +2554,24 @@ paths:
             getCreatedResource:
               operationId: getProfile
               parameters: 
-                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
               description: >
                 The `id` value returned in the response can be used as
                 the `profile_Id` parameter in `GET profiles/{profile_id}`.
+            deleteCreatedResource:
+              operationId: deleteProfile
+              parameters: 
+                profile_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `profile_Id` parameter in `DELETE profiles/{profile_id}`.
                 
           content:
             application/json:
               schema: 
-                type: array
-                items: 
                   $ref: "#/components/schemas/Profile"
             application/xml:
-              schema: 
-                type: array
-                xml:
-                  name: root     # <<<
+              schema:    # <<<
                  # wrapped: true  # <<<
                 items: 
                   $ref: "#/components/schemas/Profile"
@@ -692,13 +2582,170 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/error403Invalid'
-                  - $ref: '#/components/schemas/error403Restricted'
+                  - $ref: '#/components/schemas/error403NotStaff'
         '400':
             #description: "Report not found"   
             $ref: '#/components/responses/BadRequest'
-                  
+        '401':
+             
+            $ref: '#/components/responses/Unauthorized'
+    delete:
+      summary: Deletes a profile URI
+      description:  "Removes the endpoint for a profile resource"
+      operationId: deleteProfile
+      parameters:
+        - in: path
+          name: profile_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The profile ID
+        - in: header
+          name: Authentication
+          description: "The token used to authenticate a user. Linked to a profile resource and can be classified as a staff or student token."
+          schema:
+            type: string
+            example: "Token 5c45fbc7961rc0ad2c0e403f57cb35c6142732a1"
+          required: true
+      tags:
+      - profile
+      responses:
+        '204':
+          description: "No content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/code204'
+        '403':    # status code
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error403Invalid'
+                  - $ref: '#/components/schemas/error403NotStaff'
+        '404':
+            #description: "Report not found"   
+            $ref: '#/components/responses/NotFound'
             
-
+            
+  /modules/{module_id}:
+    get:
+      summary: Returns a university module. Updated to include announcements relevant to the module and links.
+      description:  "Returns a module with added announcement info"
+      operationId: getModule
+      parameters:
+        - in: path
+          name: module_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The module ID
+       
+      tags:
+      - old-URI-changes
+      
+      responses:
+        '200':    # status code
+          description: A representation of a module
+          links:
+            deleteResource:
+              operationId: deleteModule
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `module_id` parameter in `DELETE modules/{module_id}`.
+            updateResource:
+              operationId: putModule
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `module_id` parameter in `PUT modules/{module_id}`.
+            patchResource:
+              operationId: patchModule
+              parameters: 
+                module_id: '$request.body#/id'#"#/components/schemas/AnnouncementModule/id"
+              description: >
+                The `id` value returned in the response can be used as
+                the `module_id` parameter in `PATCH modules/{module_id}`.
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Module"
+            application/xml:
+            
+              schema:
+                  $ref: "#/components/schemas/Module"
+        '404':
+            #description: "Profile not found not found"
+            $ref: '#/components/responses/NotFound'
+  /courses/{course_id}:
+    get:
+      summary: Returns a university course. Updated to include announcements relevant to the course.
+      description:  "Returns a module with added announcement info"
+      operationId: getCourse
+      parameters:
+        - in: path
+          name: course_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The course ID
+       
+      tags:
+      - old-URI-changes
+      
+      responses:
+        '200':    # status code
+          description: A representation of a course
+          
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Course"
+            application/xml:
+            
+              schema:
+                  $ref: "#/components/schemas/Course"
+        '404':
+            #description: "Profile not found not found"
+            $ref: '#/components/responses/NotFound'
+  /faculties/{faculty_id}:
+    get:
+      summary: Returns a university faculty. Updated to include announcements relevant to the faculty.
+      description:  "Returns a module with added announcement info"
+      operationId: getFaculty
+      parameters:
+        - in: path
+          name: faculty_id   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The faculty ID
+       
+      tags:
+      - old-URI-changes
+      
+      responses:
+        '200':    # status code
+          description: A representation of a faculty
+          
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Faculty"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/Faculty"
+        '404':
+            #description: "Profile not found not found"
+            $ref: '#/components/responses/NotFound'
 components:
   responses:
     NotFound:
@@ -712,13 +2759,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error400'
+            $ref: '#/components/schemas/error401'
     BadRequest:
       description: Request could not be parsed properly
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error401'
+            $ref: '#/components/schemas/error400'
     ForbiddenAuth:
       description: Invalid Authentication
       content:
@@ -730,7 +2777,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error403Restricted'        
+            $ref: '#/components/schemas/error403Restricted'  
+    ForbiddenStaff:
+      description: User does not have staff authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error403NotStaff'  
             
   securitySchemes:
     OAuth2:
@@ -758,7 +2811,7 @@ components:
           type: string
           pattern: 'staff|student|staff and students'
           example: "staff and students"
-          description: Either staff or students
+          description: Either staff, students or both
         modules:
           type: array
           items:
@@ -778,37 +2831,128 @@ components:
         - body
         - modules
         - target
-    PostAppeal:
-      title: Fields for an appeal post request
+    PostAnnouncementCourse:
+      title: The announcement post body for a course announcement
+      type: "object"
+      
       properties:
-        url:
+        title:
           type: "string"
-          description: "Link to appeal resource"
-          example: "<https://comp3227.ecs.soton.ac.uk/appeal/1"
-        id:
+          description: "Announcement header"
+          example: "Exam beginning tomorrow"
+        target:
+          type: "string"
+          description: "The target of the announcement, either students, staff or both"
+          pattern: 'staff|student|staff and students'
+          example: "staff"
+        body:
+          type: "string"
+          description: "Body of the announcement, the main content"
+          example: "An exam has been released. Please look at the relevant info."
+        relatedCourses:
+          type: "array"
+          description: "A list of relevant courses that the announcement will be added to"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/courses/6"
+        yearGroup:
           type: "integer"
-          description: "ID of the appeal"
+          nullable: true
+          description: "The year group in the course the announcement is directed at"
           example: 2
+      required:
+        - title
+        - body
+        - relatedCourses
+        - target
+    PostAnnouncementFaculty:
+      title: The announcement post body for a faculty announcement
+      type: "object"
+      properties:
+        title:
+          type: "string"
+          description: "Announcement header"
+          example: "ECS congratulates new graduates"
+        target:
+          type: "string"
+          description: "The target of the announcement, either students, staff or both"
+          pattern: 'staff|student|staff and students'
+          example: "staff"
+        body:
+          type: "string"
+          description: "Body of the announcement, the main content"
+          example: "Well done to those who have graduated."
+        relatedFaculties:
+          type: "array"
+          description: "A list of relevant faculties that the announcement will be added to"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/faculties/2"
+      required:
+        - title
+        - body
+        - relatedFaculties
+        - target
+    PostReport:
+      title: Report post request
+      properties:
+        subject:
+          type: "string"
+          description: "Brief Reason for the report"
+          example: "Spamming Announcements"
+        perpetrator:
+          type: "string"
+          description: "Link to the profile who is being reported"
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/4"
+      required:
+        - perpetrator
+        - subject
+    PostAppeal:
+      title: Appeal post request
+      properties:
         subject:
           type: "string"
           description: "Appeal heading"
           example: "Appeal to return announcement posting."
-        date:
-          type: "string"
-          description: "Date the appealwas made"
-          example: "17/11/23"
-        Appealer:
+        appealer:
           type: "string"
           description: "Link to the profile who is appealing"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
-        Body:
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/3"
+        body:
           type: "string"
           description: "Body containing written appeal"
           example: "I would like to be able to post announcements again, I will not spam announcements."
+      required:
+        - appealer
+        - body
+        - subject
+    PutAppeal:
+      title: Appeal put request
+      properties:
+        subject:
+          type: "string"
+          description: "Appeal heading"
+          example: "Appeal to return announcement posting."
+        body:
+          type: "string"
+          description: "Body containing written appeal"
+          example: "I would like to be able to post announcements again, I will not spam announcements."
+        status:
+          type: "string"
+          description: "States of the report"
+          pattern: "Open|Approved|Denied"
+          enum:
+           - "Open"
+           - "Approved"
+           - "Denied"
           
-      
+      required:
+        - body
+        - subject
     PostProfile:
-      title: The fields for a profile put request
+      title: Profile post request
       type: object
       properties:
         studentid:
@@ -830,9 +2974,17 @@ components:
        - name
        - role
     PutProfile:
-      title: The fields for a profile put request
+      title: Profile put request
       type: object
       properties:
+        studentid:
+          type: "string"
+          description: "Student email id"
+          example: "gut6s21"
+        name:
+          type: string
+          description: The name of the student
+          example: "Schierke Elfhelm"
         status:
           type: string
           description: Posting status of the student
@@ -843,16 +2995,12 @@ components:
           description: The role of the student
           example: "Student"
           pattern: 'Staff|Student'
-        name:
-          type: string
-          description: The name of the student
-          example: "Schierke Elfhelm"
           
           
       required:
        - status
     Announcement:
-      title: The announcement post body
+      title: Announcement body format
       type: "object"
       properties:
         url:
@@ -869,12 +3017,13 @@ components:
           example: "15/11/23"
         Target:
           type: "string"
-          description: "The target of the announcement, either students or staff"
-          example: "Staff"
+          description: "The target of the announcement, either students, staff or both"
+          pattern: 'staff|student|staff and students'
+          example: "staff"
         Creator:
           type: "string"
           description: "Link to the profile who made the announcement"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/3"
         Body:
           type: "string"
           description: "Body of the announcement, the main content"
@@ -907,19 +3056,20 @@ components:
           type: "string"
           description: "Date the announcement was posted"
           example: "15/11/23"
-        Target:
+        target:
           type: "string"
-          description: "The target of the announcement, either students or staff"
-          example: "Staff"
-        Creator:
+          description: "The target of the announcement, either students, staff or both"
+          pattern: 'staff|student|staff and students'
+          example: "staff"
+        creator:
           type: "string"
           description: "Link to the profile who made the announcement"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
-        Body:
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/3"
+        body:
           type: "string"
           description: "Body of the announcement, the main content"
           example: "Coursework 1 has just been released."
-        RelatedModules:
+        relatedModules:
           type: "array"
           description: "A list of relevant modules that the announcement will be added to"
           items:
@@ -927,6 +3077,14 @@ components:
           example:
            - "https://comp3227.ecs.soton.ac.uk/modules/1"
            - "https://comp3227.ecs.soton.ac.uk/modules/2"
+        list:
+          type: "string"
+          description: "Link to navigate back to the announcement list"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements"
+        modulelist:
+          type: "string"
+          description: "Link to navigate back to the module announcement list"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/modules"
         status:
           type: "string"
           description: "States of the Announcement"
@@ -942,7 +3100,7 @@ components:
         url:
           type: "string"
           description: "Link to Announcement resource"
-          example: "https://comp3227.ecs.soton.ac.uk/announcements/course/2"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/courses/2"
         id:
           type: "integer"
           description: "ID of the course announcement"
@@ -955,31 +3113,44 @@ components:
           type: "string"
           description: "Date the announcement was posted"
           example: "15/01/24"
-        Target:
+        target:
           type: "string"
-          description: "The target of the announcement, either students or staff"
-          example: "Students"
-        Creator:
+          description: "The target of the announcement, either students, staff or both"
+          pattern: 'staff|student|staff and students'
+          example: "staff"
+        creator:
           type: "string"
           description: "Link to the profile who made the announcement"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/6"
-        Body:
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/6"
+        body:
           type: "string"
           description: "Body of the announcement, the main content"
           example: "An exam has been released. Please look at the relevant info."
-        RelatedModules:
+        relatedCourses:
           type: "array"
           description: "A list of relevant courses that the announcement will be added to"
           items:
             type: "string"
           example:
            - "https://comp3227.ecs.soton.ac.uk/courses/6"
+        yearGroup:
+          type: "integer"
+          nullable: true
+          description: "The year group in the course the announcement is directed at"
+          example: 2
+        list:
+          type: "string"
+          description: "Link to navigate back to the announcement list"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements"
+        courselist:
+          type: "string"
+          description: "Link to navigate back to the course announcement list"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/courses"
         status:
           type: "string"
           description: "States of the Announcement"
           enum:
            - "Created"
-           - "Posted"
            - "Edited"
            - "Archived"
     AnnouncementFaculty:
@@ -989,7 +3160,7 @@ components:
         url:
           type: "string"
           description: "Link to Announcement resource"
-          example: "https://comp3227.ecs.soton.ac.uk/announcements/faculty/2"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/faculties/2"
         id:
           type: "integer"
           description: "ID of the faculty announcement"
@@ -1002,31 +3173,39 @@ components:
           type: "string"
           description: "Date the announcement was posted"
           example: "15/01/24"
-        Target:
+        target:
           type: "string"
-          description: "The target of the announcement, either students or staff"
-          example: "Students"
-        Creator:
+          description: "The target of the announcement, either students, staff or both"
+          pattern: 'staff|student|staff and students'
+          example: "staff"
+        creator:
           type: "string"
           description: "Link to the profile who made the announcement"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
-        Body:
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/3"
+        body:
           type: "string"
           description: "Body of the announcement, the main content"
           example: "An exam has been released. Please look at the relevant info."
-        RelatedModules:
+        relatedFaculties:
           type: "array"
           description: "A list of relevant faculties that the announcement will be added to"
           items:
             type: "string"
           example:
            - "https://comp3227.ecs.soton.ac.uk/faculties/2"
+        list:
+          type: "string"
+          description: "Link to navigate back to the announcement list"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements"
+        facultylist:
+          type: "string"
+          description: "Link to navigate back to the faculty announcement list"
+          example: "https://comp3227.ecs.soton.ac.uk/announcements/faculties"
         status:
           type: "string"
           description: "States of the Announcement"
           enum:
            - "Created"
-           - "Posted"
            - "Edited"
            - "Archived"
     Report:
@@ -1035,11 +3214,11 @@ components:
         url:
           type: "string"
           description: "Link to report resource"
-          example: "<https://comp3227.ecs.soton.ac.uk/report/1"
+          example: "<https://comp3227.ecs.soton.ac.uk/reports/1"
         id:
           type: "integer"
           description: "ID of the report"
-          example: 2
+          example: 1
         subject:
           type: "string"
           description: "Brief Reason for the report"
@@ -1051,45 +3230,41 @@ components:
         Perpetrator:
           type: "string"
           description: "Link to the profile who is being reported"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/4"
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/4"
         Reporter:
           type: "string"
           description: "Link to the profile who made the report"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/6"
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/6"
         status:
           type: "string"
           description: "States of the report"
           enum:
            - "Open"
            - "Closed"
-        reports:
-          type: "string"
-          description: "Path to the reports made on the user"
-          example: https://comp3227.ecs.soton.ac.uk/profile/4/reports
     Appeal:
       type: "object"
       properties:
         url:
           type: "string"
           description: "Link to appeal resource"
-          example: "<https://comp3227.ecs.soton.ac.uk/appeal/1"
+          example: "<https://comp3227.ecs.soton.ac.uk/appeals/5"
         id:
           type: "integer"
           description: "ID of the appeal"
-          example: 2
+          example: 5
         subject:
           type: "string"
           description: "Appeal heading"
           example: "Appeal to return announcement posting."
         date:
           type: "string"
-          description: "Date the appealwas made"
+          description: "Date the appeal was made"
           example: "17/11/23"
-        Appealer:
+        appealer:
           type: "string"
           description: "Link to the profile who is appealing"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/3"
-        Body:
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/3"
+        body:
           type: "string"
           description: "Body containing written appeal"
           example: "I would like to be able to post announcements again, I will not spam announcements."
@@ -1116,11 +3291,11 @@ components:
         url:
           type: "string"
           description: "Link to profile resource"
-          example: "https://comp3227.ecs.soton.ac.uk/profile/4"
+          example: "https://comp3227.ecs.soton.ac.uk/profiles/4"
         id:
           type: "integer"
           description: "ID of the profile"
-          example: 2
+          example: 4
         studentid:
           type: "string"
           description: "Student email id"
@@ -1135,14 +3310,138 @@ components:
           example: Student
         status:
           type: "string"
-          description: "States of the profile"
+          description: "States of the profile. Decides whether they can post announcements or not"
           enum:
+           - "Permitted"
            - "Restricted"
-           - "Available"
         reports:
+          type: array
+          description: "Path to the reports related to the user"
+          items:
+            type: "string"
+          example: 
+           - "https://comp3227.ecs.soton.ac.uk/reports/5"
+           - "https://comp3227.ecs.soton.ac.uk/reports/8"
+    Module:
+      title: A representation of a module
+      type: "object"
+      properties:
+        url:
           type: "string"
-          description: "Path to the reports made on the user"
-          example: https://comp3227.ecs.soton.ac.uk/profile/4/reports
+          description: "Link to module resource"
+          example: "https://comp3227.ecs.soton.ac.uk/modules/109"
+        id:
+          type: "integer"
+          description: "ID of the module"
+          example: 109
+        name:
+          type: "string"
+          description: "Name of module"
+          example: "Nanomachines"
+        code:
+          type: "string"
+          description: "Module code"
+          example: "COMP4333"
+        year:
+          type: "integer"
+          description: "Year of module"
+          example: 4
+        semester:
+          type: "integer"
+          description: "Semester of the module"
+          example: 2
+        courses:
+          type: "array"
+          description: "A list of courses the module is in"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/courses/7"
+           - "https://comp3227.ecs.soton.ac.uk/courses/8"
+        faculty:
+          type: "string"
+          description: "Related faculty"
+          example: "https://comp3227.ecs.soton.ac.uk/faculties/2"
+        announcements:
+          type: "array"
+          description: "A list of relevant announcements that are for the module"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/announcements/modules/23"
+           - "https://comp3227.ecs.soton.ac.uk/announcements/modules/24"
+    Course:
+      title: A representation of a course
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to course resource"
+          example: "https://comp3227.ecs.soton.ac.uk/courses/2"
+        id:
+          type: "integer"
+          description: "ID of the course"
+          example: 2
+        name:
+          type: "string"
+          description: "Name of the course"
+          example: "Aeronautics and Astronautics"
+        code:
+          type: "string"
+          description: "Course code"
+          example: "H422"
+        degree:
+          type: "string"
+          description: "Degree classification"
+          example: "BEng"
+        faculty:
+          type: "string"
+          description: "Related faculty"
+          example: "https://comp3227.ecs.soton.ac.uk/faculties/2"
+        modules:
+          type: "array"
+          description: "A list of modules the course contains"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/modules/3"
+           - "https://comp3227.ecs.soton.ac.uk/modules/4"
+        announcements:
+          type: "array"
+          description: "A list of relevant announcements for the course"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/announcements/courses/2"
+           - "https://comp3227.ecs.soton.ac.uk/announcements/courses/3"
+           - "https://comp3227.ecs.soton.ac.uk/announcements/courses/4"
+           - "https://comp3227.ecs.soton.ac.uk/announcements/courses/5"
+    Faculty:
+      title: A representation of a faculty
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Link to faculty resource"
+          example: "https://comp3227.ecs.soton.ac.uk/faculties/1"
+        id:
+          type: "integer"
+          description: "ID of the faculty"
+          example: 1
+        name:
+          type: "string"
+          description: "Name of the faculty"
+          example: "Arts and Humanities"
+        
+        announcements:
+          type: "array"
+          description: "A list of relevant announcements for the faculty"
+          items:
+            type: "string"
+          example:
+           - "https://comp3227.ecs.soton.ac.uk/announcements/faculties/12"
+           - "https://comp3227.ecs.soton.ac.uk/announcements/faculties/23"
+           - "https://comp3227.ecs.soton.ac.uk/announcements/faculties/24"
     code204:
       type: string
       example: 'No content'
@@ -1161,14 +3460,15 @@ components:
     error403Restricted:
       type: string
       example: 'Unable to create post due to being restricted.'
-
+    error403NotStaff:
+      type: string
+      example: 'Student does not have permission for this resource.'
+    
+  
 
 tags:
   - name: announcements
     description: All announcement sections
-    
-  - name: module_announcements
-    description: Module Announcements
 
   - name: reports
     description: Report section
@@ -1179,5 +3479,5 @@ tags:
   - name: profile
     description: Info about the profile
     
-  - name: Old URI changes
-    description: Changes to the module, faculty and course URIs
+  - name: old-URI-changes
+    description: Changes to the module, faculty and course URIs in respect to announcements
