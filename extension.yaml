@@ -3442,6 +3442,25 @@ components:
            - "https://comp3227.ecs.soton.ac.uk/announcements/faculties/12"
            - "https://comp3227.ecs.soton.ac.uk/announcements/faculties/23"
            - "https://comp3227.ecs.soton.ac.uk/announcements/faculties/24"
+    OptionsBody:
+      type: "object"
+      properties:
+        renders:
+          type: array
+          description: "Available formats"
+          items:
+            type: "string"
+          example:
+           - "application/JSON"
+           - "application/XML"
+        parses:
+          type: array
+          description: "Available formats"
+          items:
+            type: "string"
+          example:
+           - "application/JSON"
+           - "application/XML"
     code204:
       type: string
       example: 'No content'
